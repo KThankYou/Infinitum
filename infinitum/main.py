@@ -1,4 +1,4 @@
-from Infinitum.Core.Bootstrapper import boot
+from Infinitum.Core.Bootstrapper import Boot
 
 
 import pygame
@@ -9,4 +9,4 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
 def init():
     pygame.init()
-    boot.boot()
+    Boot.boot()
