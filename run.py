@@ -1,4 +1,4 @@
-from infinitum.main import init
+from Infinitum.main import init
 
 if __name__ == '__main__':
     init()
