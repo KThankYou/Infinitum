@@ -11,7 +11,7 @@ class ThreadHandler:
 
     def create_process(self, function: Callable, sudo: bool = False, *args: Optional[Tuple], **kwargs: Optional[Dict]) -> Process:
         pid = self.__makePID(sudo)
-        process = Process.Process(function, args, kwargs)
+        process = Process.Process(function, *args, **kwargs)
         if sudo: self.__sudo[pid] = process
         else: self.__children[pid] = process
         return process
