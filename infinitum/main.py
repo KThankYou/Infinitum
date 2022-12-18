@@ -9,4 +9,5 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
 def init():
     pygame.init()
-    Boot.boot()
+    for i in Boot.boot():
+        print(i)
