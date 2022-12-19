@@ -11,7 +11,7 @@ class Process:
         
     def start(self):
         self.__process.start()
-        self.__process.join()
+        #self.__process.join()
         self.__started = True
 
     def is_alive(self):
