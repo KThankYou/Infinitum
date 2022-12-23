@@ -1,11 +1,12 @@
 from typing import BinaryIO, Dict, List, Tuple, Optional
-import pickle, bcrypt
+import pickle, hashlib
 
 MBT_size = 1024*1024 # 1 MB
 
 class MasterBootTable:
     def __init__(self, config: str) -> None:
         self.config = MasterBootTable.CONFIG.findall(config)
+        self.modified = False
 
     @classmethod
     def load(cls, file: BinaryIO):
@@ -19,10 +20,11 @@ class MasterBootTable:
     def make_MBT(cls):
         password = 'installer' # Hash of password is used to encrypt
         for _ in range(2): # Hash of Hash is used for password check
-            password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()) 
+            password = hashlib.sha256(password.encode()).hexdigest()
         config = {'user': 'installer', 
                 'password': password,
-                'resolution': (1600, 900)
+                'resolution': (1600, 900),
+                'file_index': 0
                 }
         return cls(config)
     

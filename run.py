@@ -1,4 +1,7 @@
-from Infinitum.main import init
+"""from Infinitum.main import init
 
 if __name__ == '__main__':
-    init()
+    init()"""
+
+from Infinitum.Core.Storage.FileManager import FileManager as FM
+

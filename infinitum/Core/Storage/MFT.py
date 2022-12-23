@@ -7,10 +7,12 @@ from Infinitum.Core.Storage.Metadata import Metadata
 MFT_size = 10*1024*1024 # 10 MB
 
 class MasterFileTable:
-    def __init__(self, MFT: Dict) -> None:
+    def __init__(self, MFT: Dict, indices: Dict[int, int]) -> None:
         self.__table = MFT
         self.__cwd = ('root', MFT['root'])
         self.__path = ['.']
+        self.modified = False
+        self.index_sizes = indices
 
     @classmethod
     def load(cls, file: BinaryIO):
@@ -18,7 +20,7 @@ class MasterFileTable:
         file.seek(MBT_size, 0)
         data = file.read(MFT_size)
         file.seek(pointer)
-        return cls(pickle.load(data.lstrip(b'0')))
+        return cls(*pickle.load(data.lstrip(b'0')))
     
     @classmethod
     def make_MFT(cls):
@@ -26,11 +28,11 @@ class MasterFileTable:
             {'Apps': {'__files': {}}, 
             'User': {'__files': {}}, 
             '__files': {}}}
-        return cls(table)
+        return cls(table, {})
     
     def flush(self, file: BinaryIO) -> None:
         file.seek(MBT_size, 0)
-        file.write(pickle.dumps(self.__table).zfill(MFT_size))
+        file.write(pickle.dumps([self.__table, self.index_sizes]).zfill(MFT_size))
 
     #Return None if successful, 1 if fail
     def make_dir(self, folder_name: str) -> Optional[1]:
@@ -43,7 +45,7 @@ class MasterFileTable:
 
     def cd(self, folder: str):
         if folder not in self.__cwd[1]: return 1
-        self.__cwd = self.__cwd[1][folder]
+        self.__cwd = folder, self.__cwd[1][folder]
         self.__path.append(folder)
 
     def set_cwd(self, directory: str) -> Optional[1]:
@@ -57,14 +59,28 @@ class MasterFileTable:
     @property
     def get_cwd(self) -> str: return '\\'.join(self.__path)
 
-    def make_file(self, file_name: str, meta_link: Metadata, location: str = None) -> Optional[1]:
+    def make_file(self, file_name: str, metadata: Metadata, file_path: str) -> Optional[1]:
         c_dir, c_path = self.__cwd, self.__path
-        if location: self.set_cwd(location)
+        if file_path: self.set_cwd(file_path)
         folder = self.__cwd[1]['__files']
         self.__cwd, self.__path = c_dir, c_path
         if file_name in folder: return 1
-        folder['__files'][file_name] = meta_link
-        
+        folder['__files'][file_name] = metadata
+        self.index_sizes[metadata.index] = metadata.size
+    
+    def exists(self, file_name: str, file_path: str | None) -> bool:
+        c_dir, c_path = self.__cwd, self.__path
+        if self.set_cwd(file_path): return 1
+        if file_name in self.__cwd['__files']: self.__cwd, self.__path = c_dir, c_path; return True
+    
+    def get_file(self, file_name: str, file_path: str) -> Metadata:
+        c_dir, c_path = self.__cwd, self.__path
+        if self.set_cwd(file_path) or file_name not in self.__cwd[1]['__files']: 
+            self.__cwd, self.__path
+            raise ValueError('File/Directory does not exist')
+        metadata, self.__cwd, self.__path = self.__cwd[1]['__files'][file_name], c_dir, c_path
+        return metadata
+
     def del_file(self, file_path: str) -> Optional[1]:
         c_dir, c_path = self.__cwd, self.__path
         *path, file = MasterFileTable.parse_path(file_path)
@@ -77,3 +93,7 @@ class MasterFileTable:
         raw = path.split('\\')
         if raw[0] == '.': raw = self.__path[1:] + raw[1:]
         return raw
+
+    @staticmethod
+    def join(*args):
+        return '\\'.join((i.rstrip('\\') for i in args))
