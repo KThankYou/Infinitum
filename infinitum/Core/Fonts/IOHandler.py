@@ -12,7 +12,7 @@ _P = re.compile(r'(\n|[^\s]+)|(?: ( +) )')
 _KWARGS = {
         # U = underline, B = bold, I = Italic, S = Strikethrough
         
-        # 0 = UBIS, 1 = UBI, 2 = U, 3 = UB, 4 = UI, 5 = BI, 6 = B+mini
+        # 0 = UBIS, 1 = UBI, 2 = U, 3 = UB, 4 = UI, 5 = BI, 6 = B+mini, 7 = mini
         'Header0': {'U': True, 'B': True, 'I': True, 'S': True, 'size': 44},
         'Header1': {'U': True, 'B': True, 'I': True, 'S': False, 'size': 44},
         'Header2': {'U': True, 'B': False, 'I': False, 'S': False, 'size': 44},
@@ -20,6 +20,7 @@ _KWARGS = {
         'Header4': {'U': True, 'B': False, 'I': True, 'S': False, 'size': 44},
         'Header5': {'U': False, 'B': True, 'I': True, 'S': False, 'size': 44},
         'Header6': {'U': False, 'B': True, 'I': False, 'S': False, 'size': 32},
+        'Header6': {'U': False, 'B': False, 'I': False, 'S': False, 'size': 32},
 
         # 0 = UBI, 1 = None, 2 = U, 3 = B, 4 = I
         'Text0': {'U': True, 'B': True, 'I': True, 'S': False, 'size': 20},
@@ -90,20 +91,30 @@ class TextHandler:
     def print(self, text: str, color: tuple | pygame.Color, surface: pygame.Surface, 
             width: bool = None, modifier: str = 'Text1', newline_width: int = 20) -> None:
         self.write(text, color, surface, width = width, newline_width = newline_width, **_KWARGS[modifier])
+    
+    def get_rect(self, text: str, size: int = 20, bold: bool = False, modifier: str = None, center: pygame.Rect = None) -> pygame.Rect:
+        if modifier:
+            modifier = _KWARGS[modifier]
+            size, bold = modifier['size'], modifier['B']
+        font = pygame.font.Font(self.font, size)
+        font.set_bold(bold)
+        text_surface = font.render(text, True, (0, 0, 0))
+        return text_surface.get_rect() if not center else text_surface.get_rect(center = center.center)
 
 def NOTHING(*args, **kwargs) -> None: return #Does Nothing
 
 class Button:
     def __init__(self, 
             text: str, Font: str, text_color: Tuple[int] = (255, 255, 255), box_color: Tuple[int] = (0, 0, 0),
-            function: Callable = NOTHING, margin: Tuple[int] = (7, 7), text_size: Tuple[int] = 20, pos = (0, 0),
-            hover_color: Tuple[int] = (200, 200, 200)) -> None:
+            function: Callable = NOTHING, margin: Tuple[int] = (7, 7), text_size: Tuple[int] = 20, pos = (0, 0), border_size: int = 1,
+            hover_color: Tuple[int] = (200, 200, 200), border: bool = False, border_color: Tuple[int, int, int] = (0, 0, 0)) -> None:
         # Box_gap is the distance between the borders of the box and the text in px
         self.text, self.function, self.text_color = text, function, text_color
         self.margin, self.text_size, self.font = margin, text_size, Font
         self.box_color, self.pos = box_color, pos
         self.rect = pygame.Rect(0,0,0,0)
         self.hover_color, self.hover = hover_color, False
+        self.border, self.border_color, self.border_size = border, border_color, border_size
 
     def on_click(self, generator = False, *args, **kwargs):
         return self.function if generator else self.function(*args, **kwargs)
@@ -119,6 +130,10 @@ class Button:
         # Calculate the position of the text on the button surface
         text_x = (button_surface.get_width() - text.get_width()) // 2
         text_y = (button_surface.get_height() - text.get_height()) // 2
+        
+        if self.border:
+            rect = button_surface.get_rect()
+            pygame.draw.rect(button_surface, (0,0,0), rect, 1)
 
         # Blit the rendered text onto the button surface
         button_surface.blit(text, (text_x, text_y)) 
@@ -137,11 +152,12 @@ class Button:
     
     def set_pos(self, x: int = None, y: int = None) -> None:
         self.pos = (x or self.pos[0], y or self.pos[1])
-
+    
 class TextBox:
     def __init__(self, 
                  placeholder: str, font: str, text_color: Tuple[int] = (0, 0, 0), box_color: Tuple[int] = (255, 255, 255),
-                 size: Tuple[int] = (100, 30), text_size: Tuple[int] = 20, pos = (0, 0), password: bool = False) -> None:
+                 size: Tuple[int] = (100, 30), text_size: Tuple[int] = 20, pos = (0, 0), password: bool = False,
+                 border_size: int = 1, border: bool = False, border_color: Tuple[int, int, int] = (0, 0, 0)) -> None:
         self.placeholder = placeholder
         self.font = font
         self.text_color = text_color
@@ -152,6 +168,7 @@ class TextBox:
         self.text = ''
         self.active = False
         self.password = password
+        self.border, self.border_color, self.border_size = border, border_color, border_size
 
     def draw(self) -> pygame.Surface:
         # Set the font and font size
@@ -173,7 +190,9 @@ class TextBox:
         
         # Render the text onto the text box surface
         text_surface = font.render(display_text + ('|' if self.active else ''), True, self.text_color)
-
+        if self.border:
+            rect = surf.get_rect()
+            pygame.draw.rect(surf, (0,0,0), rect, 1)
         # Calculate the position of the text within the text box
         text_x = (box_width - text_width) // 2
         text_y = (box_height - text_height) // 2

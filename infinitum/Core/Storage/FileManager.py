@@ -1,4 +1,4 @@
-from typing import ByteString
+from typing import ByteString, Tuple, Dict
 from hashlib import sha256
 import pickle, tempfile, datetime
 
@@ -19,9 +19,29 @@ class FileManager:
 
     @staticmethod
     def check_install(drive_path: str) -> bool:
-        drive = open(drive_path, 'rb+')
-        config = MBT.load(drive).config
+        config = FileManager.get_config(drive_path)
         return config.get('installed', False)
+
+    @staticmethod
+    def get_user(drive_path: str) -> str:
+        config = FileManager.get_config(drive_path)
+        return config.get('username', '')
+    
+    @staticmethod
+    def get_pwd(drive_path: str) -> str:
+        config = FileManager.get_config(drive_path)
+        return config.get('password', '')
+    
+    @staticmethod
+    def get_config(drive_path: str) -> Dict:
+        with open(drive_path, 'rb') as drive:
+            config = MBT.load(drive).config
+        return config
+
+    @staticmethod
+    def get_res(drive_path: str) -> Tuple[int, int]:
+        config = FileManager.get_config(drive_path)
+        return config.get('resolution', '')
 
     @classmethod
     def initial_setup(cls, drive_path: str, username: str, password: str ) -> 'FileManager':
@@ -39,7 +59,7 @@ class FileManager:
         self.MBT.config['file_index'] += 1
         self.MFT.modified = True
 
-    def write(self, data: object | str, metadata: Metadata):
+    def write(self, data: object | str, metadata: Metadata) -> None:
         pointer = sum((self.MFT.index_sizes[i] for i in range(metadata.index))) + RESERVED_SPACE
         self.drive.seek(pointer, 0)
         if not metadata.binary: 
@@ -55,7 +75,7 @@ class FileManager:
         file = self, self.MFT.get_file(file_path, file_name)
         return BinaryWriteIO(*file) if binary else TextWriteIO(*file)
     
-    def read_open(self, file_name: str, file_path: str | None = None, binary = False):
+    def read_open(self, file_name: str, file_path: str | None = None, binary = False) -> 'ReadIO':
         if not self.MFT.exists(file_name, file_path): raise Exception('File Does not Exist')
         file = self, self.MFT.get_file(file_path, file_name)
         return ReadIO(*file) if binary else ReadIO(*file)

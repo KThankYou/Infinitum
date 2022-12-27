@@ -21,7 +21,7 @@ class MasterBootTable:
         # Hash of password is used to encrypt
         for _ in range(2): # Hash of Hash is used for password check
             password = hashlib.sha256(password.encode()).hexdigest()
-        config = {'user': user, 
+        config = {'username': user, 
                 'password': password,
                 'resolution': (1600, 900),
                 'file_index': 0,
