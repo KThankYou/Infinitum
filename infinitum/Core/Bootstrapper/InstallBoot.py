@@ -272,10 +272,13 @@ class Installer:
 
     def phase4(self): #Installation Complete
         try:
-            self.FM = FileManager.initial_setup(r'.\Infinitum.vc', self.username, self.password)
+            FM = FileManager.initial_setup(r'.\Infinitum.vc', self.username, self.password)
+            FM.MBT.installed()
+            FM.close()
         except Exception as e:
             self.error, self.context = e, self.phase4_alt
             return empty_surf
+
 
         self.text, finished = TextHandler(starting=(70, 44)), False
         
@@ -380,7 +383,5 @@ class Installer:
             yield surf
     
     def phase5(self): # quit
-        try: self.FM.close()
-        except: pass
         pygame.quit()
         sys.exit()

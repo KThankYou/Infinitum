@@ -25,10 +25,13 @@ class MasterBootTable:
                 'password': password,
                 'resolution': (1600, 900),
                 'file_index': 0,
-                'installed': True
+                'installed': False
                 }
         return cls(config)
     
     def flush(self, file: BinaryIO) -> None:
         file.seek(0)
         file.write(pickle.dumps(self.config).zfill(MBT_size))
+    
+    def installed(self) -> None:
+        self.config['installed'] = True

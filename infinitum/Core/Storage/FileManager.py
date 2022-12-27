@@ -9,23 +9,26 @@ from Infinitum.Core.Storage.Metadata import Metadata
 RESERVED_SPACE = MBT_size + MFT_size
 
 class FileManager:
-    def __init__(self, drive_path: str) -> None:
+    def __init__(self, drive_path: str, pwd: str) -> None:
         self.drive, self.working_dir = open(drive_path, 'rb+'), tempfile.TemporaryDirectory()
         self.MBT, self.MFT = MBT.load(self.drive), MFT.load(self.drive)
         #self.temp_dir = tempfile.TemporaryDirectory(dir = self.working_dir)
-        self.__key = None
+        key = sha256(pwd.encode()).hexdigest()
+        if sha256(key.encode()).hexdigest() != self.MBT.config['password']: raise ValueError('Incorrect Password')
+        self.__key = key
+
+    @staticmethod
+    def check_install(drive_path: str) -> bool:
+        drive = open(drive_path, 'rb+')
+        config = MBT.load(drive).config
+        return config.get('installed', False)
 
     @classmethod
     def initial_setup(cls, drive_path: str, username: str, password: str ) -> 'FileManager':
         with open(drive_path, 'wb+') as drive:
             MBT_, MFT_ = MBT.make_MBT(username, password), MFT.make_MFT()
             MBT_.flush(drive); MFT_.flush(drive)
-        return cls(drive_path)
-        
-    def check_pwd(self, pwd: str):
-        key = sha256(pwd.encode()).hexdigest()
-        if sha256(key.encode()).hexdigest() != self.MBT.config['password']: raise ValueError('Incorrect Password')
-        self.__key = key
+        return cls(drive_path, password)
 
     # file_path is the location inside the app
     def __create_file(self, file_name: str, file_path: str, binary: bool) -> None:
@@ -81,8 +84,8 @@ class FileManager:
         return bytes(decrypted)
 
     def close(self):
-        self.MBT.flush()
-        self.MFT.flush()
+        self.MBT.flush(self.drive)
+        self.MFT.flush(self.drive)
         self.drive.close()
 
 def __open__(function): # Decor to check if handle is closed
