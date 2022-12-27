@@ -10,11 +10,18 @@ RESERVED_SPACE = MBT_size + MFT_size
 
 class FileManager:
     def __init__(self, drive_path: str) -> None:
-        self.drive, self.working_dir = open(drive_path, 'rb'), tempfile.TemporaryDirectory()
+        self.drive, self.working_dir = open(drive_path, 'rb+'), tempfile.TemporaryDirectory()
         self.MBT, self.MFT = MBT.load(self.drive), MFT.load(self.drive)
-        self.temp_dir = tempfile.TemporaryDirectory(dir = self.working_dir)
+        #self.temp_dir = tempfile.TemporaryDirectory(dir = self.working_dir)
         self.__key = None
 
+    @classmethod
+    def initial_setup(cls, drive_path: str) -> 'FileManager':
+        with open(drive_path, 'rb+') as drive:
+            MBT_, MFT_ = MBT.make_MBT(drive), MFT.make_MFT(drive)
+            MBT_.flush(); MFT_.flush()
+        return cls(drive_path)
+        
     def check_pwd(self, pwd: str):
         key = sha256(pwd.encode()).hexdigest()
         if sha256(key.encode()).hexdigest() != self.MBT.config['password']: raise ValueError('Incorrect Password')
@@ -27,7 +34,7 @@ class FileManager:
         fail = self.MFT.make_file(file_name, metadata, file_path, binary)
         if fail: return 1
         self.MBT.config['file_index'] += 1
-        self.MBT.modified = self.MFT.modified = True
+        self.MFT.modified = True
 
     def write(self, data: object | str, metadata: Metadata):
         pointer = sum((self.MFT.index_sizes[i] for i in range(metadata.index))) + RESERVED_SPACE
@@ -56,7 +63,7 @@ class FileManager:
         out = self.__decrypt(self.drive.read(Bytes or metadata.size))
         return out.decode() if not metadata.binary else pickle.loads(out)
 
-    def __encrypt(self, data: ByteString):
+    def __encrypt(self, data: ByteString) -> ByteString:
         if not self.__key: return data
         result, key = [], 0
         for index in range(len(data)):
@@ -65,13 +72,18 @@ class FileManager:
             if key >= len(self.__key): key = 0
         return pickle.dumps(result)
 
-    def __decrypt(self, data: ByteString):
+    def __decrypt(self, data: ByteString) -> ByteString:
         encrypted, decrypted = pickle.loads(data), []
         for index in range(len(encrypted)):
             decrypted[index] -= ord(self.__key[key])
             key += 1
             if key >= len(self.__key): key = 0
         return bytes(decrypted)
+
+    def close(self):
+        self.MBT.flush()
+        self.MFT.flush()
+        self.drive.close()
 
 def __open__(function): # Decor to check if handle is closed
     def helper(*args, **kwargs):

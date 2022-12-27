@@ -1,12 +1,11 @@
-from typing import BinaryIO, Dict, List, Tuple, Optional
+from typing import BinaryIO, Dict
 import pickle, hashlib
 
 MBT_size = 1024*1024 # 1 MB
 
 class MasterBootTable:
-    def __init__(self, config: str) -> None:
-        self.config = MasterBootTable.CONFIG.findall(config)
-        self.modified = False
+    def __init__(self, config: Dict) -> None:
+        self.config = config
 
     @classmethod
     def load(cls, file: BinaryIO):
@@ -14,17 +13,19 @@ class MasterBootTable:
         file.seek(0)
         data = file.read(MBT_size)
         file.seek(pointer)
-        return cls(pickle.load(data.lstrip(b'0')))
+        try: return cls(pickle.loads(data.lstrip(b'0')))
+        except: return cls({'installed': False})
     
     @classmethod
-    def make_MBT(cls):
-        password = 'installer' # Hash of password is used to encrypt
+    def make_MBT(cls, user: str, password: str):
+        # Hash of password is used to encrypt
         for _ in range(2): # Hash of Hash is used for password check
             password = hashlib.sha256(password.encode()).hexdigest()
-        config = {'user': 'installer', 
+        config = {'user': user, 
                 'password': password,
                 'resolution': (1600, 900),
-                'file_index': 0
+                'file_index': 0,
+                'installed': False
                 }
         return cls(config)
     

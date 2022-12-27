@@ -6,6 +6,13 @@ from Infinitum.Core.Storage.Metadata import Metadata
 
 MFT_size = 10*1024*1024 # 10 MB
 
+def modified(function):
+    def helper(*args, **kwargs):
+        res = function(*args, **kwargs)
+        args[0].modified = True
+        return res
+    return helper
+
 class MasterFileTable:
     def __init__(self, MFT: Dict, indices: Dict[int, int]) -> None:
         self.__table = MFT
@@ -15,15 +22,16 @@ class MasterFileTable:
         self.index_sizes = indices
 
     @classmethod
-    def load(cls, file: BinaryIO):
+    def load(cls, file: BinaryIO) -> 'MasterFileTable':
         pointer = file.tell()
-        file.seek(MBT_size, 0)
+        file.seek(MFT_size, 0)
         data = file.read(MFT_size)
         file.seek(pointer)
-        return cls(*pickle.load(data.lstrip(b'0')))
+        try: return cls(*pickle.loads(data.lstrip(b'0')))
+        except: return cls({'root':{}}, {})
     
     @classmethod
-    def make_MFT(cls):
+    def make_MFT(cls) -> 'MasterFileTable':
         table = {'root': 
             {'Apps': {'__files': {}}, 
             'User': {'__files': {}}, 
@@ -31,14 +39,19 @@ class MasterFileTable:
         return cls(table, {})
     
     def flush(self, file: BinaryIO) -> None:
-        file.seek(MBT_size, 0)
-        file.write(pickle.dumps([self.__table, self.index_sizes]).zfill(MFT_size))
+        if self.modified:
+            file.seek(MBT_size, 0)
+            file.write(pickle.dumps([self.__table, self.index_sizes]).zfill(MFT_size))
+            self.modified = False
+        else: return 1
 
     #Return None if successful, 1 if fail
+    @modified
     def make_dir(self, folder_name: str) -> Optional[1]:
         if folder_name in self.__cwd[1]: return 1
         self.__cwd[1][folder_name] = {'__files':{}}
 
+    @modified
     def del_dir(self, folder_name: str) -> Optional[1]:
         if folder_name not in self.__cwd[1]: return 1
         del self.__cwd[1][folder_name]
@@ -59,6 +72,7 @@ class MasterFileTable:
     @property
     def get_cwd(self) -> str: return '\\'.join(self.__path)
 
+    @modified
     def make_file(self, file_name: str, metadata: Metadata, file_path: str) -> Optional[1]:
         c_dir, c_path = self.__cwd, self.__path
         if file_path: self.set_cwd(file_path)
@@ -81,6 +95,7 @@ class MasterFileTable:
         metadata, self.__cwd, self.__path = self.__cwd[1]['__files'][file_name], c_dir, c_path
         return metadata
 
+    @modified
     def del_file(self, file_path: str) -> Optional[1]:
         c_dir, c_path = self.__cwd, self.__path
         *path, file = MasterFileTable.parse_path(file_path)
