@@ -1,7 +1,7 @@
 from typing import BinaryIO, Dict
 import pickle, hashlib
 
-MBT_size = 1024*1024 # 1 MB
+MBT_size = 1024*1024//2 # 0.5 MB
 
 class MasterBootTable:
     def __init__(self, config: Dict) -> None:
@@ -25,7 +25,7 @@ class MasterBootTable:
                 'password': password,
                 'resolution': (1600, 900),
                 'file_index': 0,
-                'installed': False
+                'installed': True
                 }
         return cls(config)
     

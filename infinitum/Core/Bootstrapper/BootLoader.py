@@ -7,5 +7,5 @@ def init():
     FM = FileManager(r'.\Infinitum.vc')
     if not FM.MBT.config['installed']: return False
     Threader = ThreadHandler()
-    WinManager = DWM.init(Threader=Threader)
+    DWM.init(Threader=Threader)
     return True

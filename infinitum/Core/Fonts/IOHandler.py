@@ -1,4 +1,4 @@
-from typing import Tuple, Callable, Pattern
+from typing import Tuple, Callable
 
 import pygame, re, sys
 
@@ -8,6 +8,26 @@ _FONT = {
     }
 
 _P = re.compile(r'(\n|[^\s]+)|(?: ( +) )')
+
+_KWARGS = {
+        # U = underline, B = bold, I = Italic, S = Strikethrough
+        
+        # 0 = UBIS, 1 = UBI, 2 = U, 3 = UB, 4 = UI, 5 = BI, 6 = B+mini
+        'Header0': {'U': True, 'B': True, 'I': True, 'S': True, 'size': 44},
+        'Header1': {'U': True, 'B': True, 'I': True, 'S': False, 'size': 44},
+        'Header2': {'U': True, 'B': False, 'I': False, 'S': False, 'size': 44},
+        'Header3': {'U': True, 'B': True, 'I': False, 'S': False, 'size': 44},
+        'Header4': {'U': True, 'B': False, 'I': True, 'S': False, 'size': 44},
+        'Header5': {'U': False, 'B': True, 'I': True, 'S': False, 'size': 44},
+        'Header6': {'U': False, 'B': True, 'I': False, 'S': False, 'size': 32},
+
+        # 0 = UBI, 1 = None, 2 = U, 3 = B, 4 = I
+        'Text0': {'U': True, 'B': True, 'I': True, 'S': False, 'size': 20},
+        'Text1': {'U': False, 'B': False, 'I': False, 'S': False, 'size': 20},
+        'Text2': {'U': True, 'B': False, 'I': False, 'S': False, 'size': 20},
+        'Text3': {'U': False, 'B': True, 'I': False, 'S': False, 'size': 20},
+        'Text4': {'U': False, 'B': False, 'I': True, 'S': False, 'size': 20},
+        }
 
 class TextHandler:
     def __init__(self, font: str = 'OpenSans', starting: Tuple = (0, 0)) -> None:
@@ -65,6 +85,11 @@ class TextHandler:
     def get_pos(self) -> Tuple[int]: return self.pointer
 
     def reset_pos(self) -> None: self.pointer = self.__default_pos
+    
+    #Wrapper for write and supports the formats in _KWARGS
+    def print(self, text: str, color: tuple | pygame.Color, surface: pygame.Surface, 
+            width: bool = None, modifier: str = 'Text1', newline_width: int = 20) -> None:
+        self.write(text, color, surface, width = width, newline_width = newline_width, **_KWARGS[modifier])
 
 def NOTHING(*args, **kwargs) -> None: return #Does Nothing
 
@@ -126,7 +151,6 @@ class TextBox:
         self.pos = pos
         self.text = ''
         self.active = False
-        self.pulse = True
         self.password = password
 
     def draw(self) -> pygame.Surface:
@@ -148,8 +172,7 @@ class TextBox:
         surf.fill(self.box_color)
         
         # Render the text onto the text box surface
-        text_surface = font.render(display_text + '|'*(self.active and self.pulse), True, self.text_color)
-        self.pulse = not self.pulse
+        text_surface = font.render(display_text + ('|' if self.active else ''), True, self.text_color)
 
         # Calculate the position of the text within the text box
         text_x = (box_width - text_width) // 2

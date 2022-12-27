@@ -4,7 +4,7 @@ import pickle
 from Infinitum.Core.Storage.MBT import MBT_size
 from Infinitum.Core.Storage.Metadata import Metadata
 
-MFT_size = 10*1024*1024 # 10 MB
+MFT_size = 1*1024*1024 # 1 MB
 
 def modified(function):
     def helper(*args, **kwargs):
@@ -36,11 +36,13 @@ class MasterFileTable:
             {'Apps': {'__files': {}}, 
             'User': {'__files': {}}, 
             '__files': {}}}
-        return cls(table, {})
+        obj = cls(table, {})
+        obj.modified = True
+        return obj
     
     def flush(self, file: BinaryIO) -> None:
         if self.modified:
-            file.seek(MBT_size, 0)
+            file.seek(MFT_size, 0)
             file.write(pickle.dumps([self.__table, self.index_sizes]).zfill(MFT_size))
             self.modified = False
         else: return 1

@@ -16,10 +16,10 @@ class FileManager:
         self.__key = None
 
     @classmethod
-    def initial_setup(cls, drive_path: str) -> 'FileManager':
-        with open(drive_path, 'rb+') as drive:
-            MBT_, MFT_ = MBT.make_MBT(drive), MFT.make_MFT(drive)
-            MBT_.flush(); MFT_.flush()
+    def initial_setup(cls, drive_path: str, username: str, password: str ) -> 'FileManager':
+        with open(drive_path, 'wb+') as drive:
+            MBT_, MFT_ = MBT.make_MBT(username, password), MFT.make_MFT()
+            MBT_.flush(drive); MFT_.flush(drive)
         return cls(drive_path)
         
     def check_pwd(self, pwd: str):

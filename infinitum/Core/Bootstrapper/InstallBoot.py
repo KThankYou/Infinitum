@@ -1,11 +1,13 @@
 #Handle First time boot
 from typing import Tuple
-from Infinitum.Core.Storage.FileManager import FileManager
+from Infinitum.Core.Bootstrapper.text import welcome, user_details, installation, installation_alt, install_success, install_fail
 from Infinitum.Core.Fonts.IOHandler import TextHandler, Button, TextBox
-from Infinitum.Core.Bootstrapper.text import welcome, user_details
-import pygame, sys
+from Infinitum.Core.Storage.FileManager import FileManager
+import pygame, sys, re
 
-
+empty_surf = pygame.Surface((0,0))
+password_pattern = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\d\s])\S{8,}$")
+text_color, button_color, X = (251,230,255), (118,0,183), 1150
 
 def draw_text(txt: str, font: pygame.font.Font, color: Tuple, surface: pygame.Surface, x: int, y: int, styles = None):
     textobj = font.render(txt, 1, color, styles)
@@ -14,29 +16,12 @@ def draw_text(txt: str, font: pygame.font.Font, color: Tuple, surface: pygame.Su
     surface.blit(textobj, textrect)
 
 class Installer:
-    # U = underline, B = bold, I = Italic, S = Strikethrough
-    KWARGS = {
-        # 0 = UBIS, 1 = UBI, 2 = U, 3 = UB, 4 = UI, 5 = BI, 6 = B+mini
-        'Header0': {'U': True, 'B': True, 'I': True, 'S': True, 'size': 44},
-        'Header1': {'U': True, 'B': True, 'I': True, 'S': False, 'size': 44},
-        'Header2': {'U': True, 'B': False, 'I': False, 'S': False, 'size': 44},
-        'Header3': {'U': True, 'B': True, 'I': False, 'S': False, 'size': 44},
-        'Header4': {'U': True, 'B': False, 'I': True, 'S': False, 'size': 44},
-        'Header5': {'U': False, 'B': True, 'I': True, 'S': False, 'size': 44},
-        'Header6': {'U': False, 'B': True, 'I': False, 'S': False, 'size': 32},
-
-        # 0 = UBI, 1 = None, 2 = U, 3 = B, 4 = I
-        'Text0': {'U': True, 'B': True, 'I': True, 'S': False, 'size': 20},
-        'Text1': {'U': False, 'B': False, 'I': False, 'S': False, 'size': 20},
-        'Text2': {'U': True, 'B': False, 'I': False, 'S': False, 'size': 20},
-        'Text3': {'U': False, 'B': True, 'I': False, 'S': False, 'size': 20},
-        'Text4': {'U': False, 'B': False, 'I': True, 'S': False, 'size': 20},
-        
-        }
     def __init__(self) -> None:
-        self.FM = FileManager(r'.\Infinitum.vc')
+        self.FM = None
         self.bg = pygame.image.load(r'.\Infinitum\Core\Bootstrapper\installer.jpg')
-        self.context, self.installing = None, True
+        self.context = None
+        self.username = self.password = ''
+        self.error = None
 
     def main(self) -> None:
         pygame.init()
@@ -46,16 +31,14 @@ class Installer:
         
         contexts = {1: self.phase1, 2: self.phase2, 3: self.phase3, 4: self.phase4}
         self.context = contexts[1]
-        while self.installing:
+        while True:
             pygame.display.flip()
             for screen in self.context():
                 display.blit(screen, (0, 0))
                 pygame.display.update()
-        pygame.quit()
 
     def phase1(self): #Welcome_Screen
-        finished = False
-        self.text, X = TextHandler(starting=(70, 44)), 1150
+        self.text, finished = TextHandler(starting=(70, 44)), False
         text_color, button_color = (251,230,255), (118,0,183)
         button1 = Button('Back <', self.text.font, box_color = button_color)
         button2 = Button('Next >', self.text.font, box_color = button_color, function = self.phase2)
@@ -68,7 +51,7 @@ class Installer:
 
             #Write Welcome Header
             for text_type, text in welcome:
-                self.text.write(text, text_color, surf, **Installer.KWARGS[text_type])
+                self.text.print(text, text_color, surf, modifier = text_type)
 
             row_offset = self.text.get_pos()[1]
             button1.set_pos(X, row_offset)
@@ -92,17 +75,22 @@ class Installer:
                     button_rect = button.get_rect()
                     button.hover = button_rect.collidepoint(mouse_pos)
                     if button.hover:
-                        
                         if event.type == pygame.MOUSEBUTTONDOWN:
                             self.context = button.on_click(generator=True)
                             finished = True
-                    
 
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE: 
+                        self.context = self.phase4_alt
+                        finished = True
+                    if event.key == pygame.K_RETURN:
+                        self.context = self.phase2
+                        finished = True
             yield surf
 
     def phase2(self): #Username, password etc
-        finished = False
-        self.text, X = TextHandler(starting=(70, 44)), 1150
+        self.username = self.password = ''
+        self.text, finished = TextHandler(starting=(70, 44)), False
         text_color, button_color = (251,230,255), (118,0,183)
         
         button1 = Button('Back <', self.text.font, box_color = button_color, function = self.phase1)
@@ -119,7 +107,7 @@ class Installer:
             surf.blit(self.bg, (0,0)) # Draw Background
 
             for text_type, text in user_details:
-                self.text.write(text, text_color, surf, **Installer.KWARGS[text_type])
+                self.text.print(text, text_color, surf, modifier = text_type)
 
             row_offset = self.text.get_pos()[1]
 
@@ -152,6 +140,7 @@ class Installer:
                         while box.active:
                             surf.blit(box.typing(), box.get_pos())
                             yield surf
+                        self.username, self.password = text_box1.get_text(), text_box2.get_text()
                     
                 for button in buttons:
                     button_rect = button.get_rect()
@@ -162,14 +151,236 @@ class Installer:
                             self.context = button.on_click(generator=True)
                             finished = True
 
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE: 
+                        self.context = self.phase4_alt
+                        finished = True
+                    if event.key == pygame.K_RETURN:
+                        self.context = self.phase3
+                        finished = True
+
             yield surf
 
-    def phase3(self): #Installation in Progress
-        self.installing = False #TODO: remove this
+    def phase3(self): #Confirmation
+        if not self.username or not password_pattern.search(self.password): 
+            self.context, finished = self.phase3_alt, True
+            return empty_surf
+
+        self.text, finished = TextHandler(starting=(70, 44)), False
+        text_color, button_color = (251,230,255), (118,0,183)
+        
+        button1 = Button('Back <', self.text.font, box_color = button_color, function = self.phase2)
+        button2 = Button('Next >', self.text.font, box_color = button_color, function = self.phase4)
+        button3 = Button('Cancel', self.text.font, box_color = button_color, function = self.phase4_alt)
+        while not finished:
+            self.text.reset_pos()
+            surf = pygame.Surface((1600, 900))
+
+            surf.blit(self.bg, (0,0)) # Draw Background
+
+            for text_type, text in installation:
+                self.text.print(text, text_color, surf, modifier = text_type)
+
+            row_offset = self.text.get_pos()[1]
+            button1.set_pos(X, row_offset)
+            button2.set_pos(X + 100, row_offset)
+            button3.set_pos(X + 195, row_offset)
+
+            surf.blit(button1.draw(), button1.get_pos())
+            surf.blit(button2.draw(), button2.get_pos())
+            surf.blit(button3.draw(), button3.get_pos())
+
+            buttons = (button1, button2, button3)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                mouse_pos = pygame.mouse.get_pos()
+
+                for button in buttons:
+                    button_rect = button.get_rect()
+                    button.hover = button_rect.collidepoint(mouse_pos)
+                    if button.hover:
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            self.context = button.on_click(generator=True)
+                            finished = True
+                
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE: 
+                        self.context = self.phase4_alt
+                        finished = True
+                    if event.key == pygame.K_RETURN:
+                        self.context = self.phase4
+                        finished = True
+
+            yield surf
+
+    def phase3_alt(self): #Invalid Username/Password
+        self.text, finished = TextHandler(starting=(70, 44)), False
+        text_color, button_color = (251,230,255), (118,0,183)
+        button1 = Button('Back <', self.text.font, box_color = button_color, function = self.phase2)
+        button2 = Button('Next >', self.text.font, box_color = button_color, function = self.phase2)
+        button3 = Button('Cancel', self.text.font, box_color = button_color, function = self.phase4_alt)
+        while not finished:
+            self.text.reset_pos()
+            surf = pygame.Surface((1600, 900))
+
+            surf.blit(self.bg, (0,0)) # Draw Background
+
+            #Write Welcome Header
+            for text_type, text in installation_alt:
+                self.text.print(text, text_color, surf, modifier = text_type)
+
+            row_offset = self.text.get_pos()[1]
+            button1.set_pos(X, row_offset)
+            button2.set_pos(X + 100, row_offset)
+            button3.set_pos(X + 195, row_offset)
+            
+            surf.blit(button1.draw(), button1.get_pos())
+            surf.blit(button2.draw(), button2.get_pos())
+            surf.blit(button3.draw(), button3.get_pos())
+
+            buttons = (button1, button2, button3)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                
+                mouse_pos = pygame.mouse.get_pos()
+
+                for button in buttons:
+                    button_rect = button.get_rect()
+                    button.hover = button_rect.collidepoint(mouse_pos)
+                    if button.hover:
+                        
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            self.context = button.on_click(generator=True)
+                            finished = True
+                    
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE: 
+                        self.context = self.phase4_alt
+                        finished = True
+                    if event.key == pygame.K_RETURN:
+                        self.context = self.phase2
+                        finished = True
+
+            yield surf
 
     def phase4(self): #Installation Complete
-        self.installing = False
+        try:
+            self.FM = FileManager.initial_setup(r'.\Infinitum.vc', self.username, self.password)
+        except Exception as e:
+            self.error, self.context = e, self.phase4_alt
+            return empty_surf
+
+        self.text, finished = TextHandler(starting=(70, 44)), False
+        
+        button1 = Button('Back <', self.text.font, box_color = button_color)
+        button2 = Button('Finish', self.text.font, box_color = button_color, function = self.phase5)
+        button3 = Button('Cancel', self.text.font, box_color = button_color, function = self.phase5)
+        while not finished:
+            self.text.reset_pos()
+            surf = pygame.Surface((1600, 900))
+
+            surf.blit(self.bg, (0,0)) # Draw Background
+
+            #Write Welcome Header
+            for text_type, text in install_success:
+                self.text.print(text, text_color, surf, modifier = text_type)
+
+            row_offset = self.text.get_pos()[1]
+            button1.set_pos(X, row_offset)
+            button2.set_pos(X + 100, row_offset)
+            button3.set_pos(X + 195, row_offset)
+            
+            surf.blit(button1.draw(), button1.get_pos())
+            surf.blit(button2.draw(), button2.get_pos())
+            surf.blit(button3.draw(), button3.get_pos())
+
+            buttons = (button1, button2, button3)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                
+                mouse_pos = pygame.mouse.get_pos()
+
+                for button in buttons:
+                    button_rect = button.get_rect()
+                    button.hover = button_rect.collidepoint(mouse_pos)
+                    if button.hover:
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            self.context = button.on_click(generator=True)
+                            finished = True
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE: 
+                        self.context = self.phase5
+                        finished = True
+                    if event.key == pygame.K_RETURN:
+                        self.context = self.phase5
+                        finished = True
+            yield surf
 
     def phase4_alt(self): # Installation Failed
-        self.installing = False
-        yield pygame.Surface((0,0))
+        self.text, finished = TextHandler(starting=(70, 44)), False
+        text_color, button_color = (251,230,255), (118,0,183)
+        button1 = Button('Back <', self.text.font, box_color = button_color)
+        button2 = Button('Next >', self.text.font, box_color = button_color, function = self.phase5)
+        button3 = Button('Cancel', self.text.font, box_color = button_color, function = self.phase5)
+        while not finished:
+            self.text.reset_pos()
+            surf = pygame.Surface((1600, 900))
+
+            surf.blit(self.bg, (0,0)) # Draw Background
+
+            #Write Welcome Header
+            h1, t1 = install_fail[0]; h2, t2 = install_fail[1]
+            self.text.print(t1, text_color, surf, modifier = h1)
+            self.text.print(t2.format(self.error), text_color, surf, modifier = h2)
+
+            row_offset = self.text.get_pos()[1]
+            button1.set_pos(X, row_offset)
+            button2.set_pos(X + 100, row_offset)
+            button3.set_pos(X + 195, row_offset)
+            
+            surf.blit(button1.draw(), button1.get_pos())
+            surf.blit(button2.draw(), button2.get_pos())
+            surf.blit(button3.draw(), button3.get_pos())
+
+            buttons = (button1, button2, button3)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                
+                mouse_pos = pygame.mouse.get_pos()
+
+                for button in buttons:
+                    button_rect = button.get_rect()
+                    button.hover = button_rect.collidepoint(mouse_pos)
+                    if button.hover:
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            self.context = button.on_click(generator=True)
+                            finished = True
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE: 
+                        self.context = self.phase5
+                        finished = True
+                    if event.key == pygame.K_RETURN:
+                        self.context = self.phase5
+                        finished = True
+            yield surf
+    
+    def phase5(self): # quit
+        try: self.FM.close()
+        except: pass
+        pygame.quit()
+        sys.exit()
