@@ -27,7 +27,6 @@ class Login:
         self.pfp.blit(pfp, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
 
     def main(self) -> None:
-        pygame.init()
         fps = pygame.time.Clock()
         fps.tick(30)
         display = pygame.display.set_mode(self.res)
@@ -37,7 +36,6 @@ class Login:
             for screen in self.draw():
                 display.blit(screen, (0, 0))
                 pygame.display.update()
-        pygame.quit()
         return self.password
 
     def draw(self) -> pygame.Surface:

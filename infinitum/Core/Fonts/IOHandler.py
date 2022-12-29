@@ -1,4 +1,4 @@
-from typing import Tuple, Callable
+from typing import Tuple, Callable, List
 
 import pygame, re, sys
 
@@ -22,13 +22,16 @@ _KWARGS = {
         'Header6': {'U': False, 'B': True, 'I': False, 'S': False, 'size': 32},
         'Header6': {'U': False, 'B': False, 'I': False, 'S': False, 'size': 32},
 
-        # 0 = UBI, 1 = None, 2 = U, 3 = B, 4 = I
+        # 0 = UBI, 1 = None, 2 = U, 3 = B, 4 = I, 5 = mini
         'Text0': {'U': True, 'B': True, 'I': True, 'S': False, 'size': 20},
         'Text1': {'U': False, 'B': False, 'I': False, 'S': False, 'size': 20},
         'Text2': {'U': True, 'B': False, 'I': False, 'S': False, 'size': 20},
         'Text3': {'U': False, 'B': True, 'I': False, 'S': False, 'size': 20},
         'Text4': {'U': False, 'B': False, 'I': True, 'S': False, 'size': 20},
+        'Text5': {'U': False, 'B': False, 'I': True, 'S': False, 'size': 18},
         }
+
+pygame.font.init()
 
 class TextHandler:
     def __init__(self, font: str = 'OpenSans', starting: Tuple = (0, 0)) -> None:
@@ -40,7 +43,7 @@ class TextHandler:
     # U = underline, B = bold, I = Italic, S = Strikethrough
     def write(self, 
         text: str, color: tuple | pygame.Color, surface: pygame.Surface, size: int = None, width: bool = None,
-        U: bool = False, B: bool = False, I: bool = False, S: bool = False, newline_width: int = 20) -> None:
+        U: bool = False, B: bool = False, I: bool = False, S: bool = False, newline_width: int = 20, special_flags: List = 0) -> None:
 
         if not isinstance(size, int) or size <= 0: raise ValueError('Size must be a positive integer')
 
@@ -73,7 +76,7 @@ class TextHandler:
                 y += newline_width
                 continue
             rendered_line = font.render(line, True, color)
-            surface.blit(rendered_line, (self.pointer[0], self.pointer[1] + y))
+            surface.blit(rendered_line, (self.pointer[0], self.pointer[1] + y), special_flags=special_flags)
             y += line_height
 
         while lines and lines[-1] == '': lines.pop()
@@ -81,16 +84,19 @@ class TextHandler:
         # Set the position of the TextHandler object to the final position of the rendered text
         self.pointer = self.pointer[0], self.pointer[1] + y + newline_width
 
-    def set_pos(self, x: int = 0, y: int = 0) -> None: self.pointer = (x, y)
+    def set_pos(self, x: int = 0, y: int = 0) -> None: 
+        self.pointer = (x, y)
 
-    def get_pos(self) -> Tuple[int]: return self.pointer
+    def get_pos(self) -> Tuple[int]: 
+        return self.pointer
 
-    def reset_pos(self) -> None: self.pointer = self.__default_pos
+    def reset_pos(self) -> None: 
+        self.pointer = self.__default_pos
     
     #Wrapper for write and supports the formats in _KWARGS
     def print(self, text: str, color: tuple | pygame.Color, surface: pygame.Surface, 
-            width: bool = None, modifier: str = 'Text1', newline_width: int = 20) -> None:
-        self.write(text, color, surface, width = width, newline_width = newline_width, **_KWARGS[modifier])
+            width: bool = None, modifier: str = 'Text1', newline_width: int = 20, special_flags: List = 0) -> None:
+        self.write(text, color, surface, width = width, newline_width = newline_width, special_flags = special_flags, **_KWARGS[modifier])
     
     def get_rect(self, text: str, size: int = 20, bold: bool = False, modifier: str = None, center: pygame.Rect = None) -> pygame.Rect:
         if modifier:
@@ -133,7 +139,7 @@ class Button:
         
         if self.border:
             rect = button_surface.get_rect()
-            pygame.draw.rect(button_surface, (0,0,0), rect, 1)
+            pygame.draw.rect(button_surface, self.border_color, rect, self.border_size)
 
         # Blit the rendered text onto the button surface
         button_surface.blit(text, (text_x, text_y)) 

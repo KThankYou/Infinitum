@@ -86,7 +86,7 @@ class MasterFileTable:
     
     def exists(self, file_name: str, file_path: str | None) -> bool:
         c_dir, c_path = self.__cwd, self.__path
-        if self.set_cwd(file_path): return 1
+        if self.set_cwd(file_path): return False
         if file_name in self.__cwd['__files']: self.__cwd, self.__path = c_dir, c_path; return True
     
     def get_file(self, file_name: str, file_path: str) -> Metadata:

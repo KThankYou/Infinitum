@@ -68,7 +68,7 @@ class FileManager:
             content = pickle.dumps(data).zfill(metadata.size)
         self.drive.write(self.__encrypt(content))
 
-    def write_open(self, file_name: str, file_path: str | None = None, overwrite = False, binary = False) -> 'BinaryWriteIO | TextWriteIO': 
+    def write_open(self, file_name: str, file_path: str | None = None, overwrite: bool = False, binary: bool = False) -> 'BinaryWriteIO | TextWriteIO': 
         if overwrite and self.MFT.exists(file_name, file_path): self.MFT.del_file(file_path)
         self.__create_file(file_name, file_path, binary)
         self.MFT.flush()
