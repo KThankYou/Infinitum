@@ -26,7 +26,6 @@ class Login:
         pygame.draw.ellipse(self.pfp, (255, 255, 255, 255), (0, 0, *size))
         self.pfp.blit(pfp, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
 
-
     def main(self) -> None:
         fps = pygame.time.Clock()
         fps.tick(30)
