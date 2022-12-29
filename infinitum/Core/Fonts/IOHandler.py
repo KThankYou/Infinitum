@@ -151,7 +151,7 @@ class Button:
 
     def set_pos(self, x: int = None, y: int = None) -> None:
         self.rect.topleft = (x or self.rect.x, y or self.rect.y)
-    
+
 class TextBox:
     def __init__(self, 
             placeholder: str, font: str, text_color: Tuple[int] = (0, 0, 0), box_color: Tuple[int] = (255, 255, 255),
@@ -238,3 +238,39 @@ class TextBox:
 
     def get_text(self) -> str:
         return self.text
+
+class DropdownMenu:
+    def __init__(self, pos: Tuple[int, int], width: int, height: int, dropup: bool = False, buttons: List[Button] = [] ) -> None:
+        self.pos = pos
+        self.width = width
+        self.height = height
+        self.buttons = buttons
+        self.dropup = dropup
+        self.refresh()
+
+    def add_button(self, button: object) -> None:
+        self.buttons.append(button)
+        self.refresh()
+
+    def refresh(self) -> None:
+        self.surf = pygame.Surface((self.width, self.height))
+        self.rect = pygame.Rect(self.pos, self.surf.get_size())
+        if self.dropup:
+            self.rect.bottom = self.pos[1]
+        for button in self.buttons:
+            button.set_pos(self.rect.x, self.rect.y + self.height)
+            self.height += button.get_rect().height
+
+    def set_pos(self, pos: Tuple[int, int]) -> None:
+        self.pos = pos
+        self.refresh()
+
+    def draw(self) -> pygame.Surface:
+        self.surf.fill((255, 255, 255))
+        for button in self.buttons:
+            button_surf = button.draw()
+            self.surf.blit(button_surf, button.get_pos())
+        return self.surf
+
+pass
+

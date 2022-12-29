@@ -2,14 +2,14 @@ from Infinitum.Core.Fonts.IOHandler import Button, TextHandler
 from typing import Tuple
 import pygame
 
-class _Process:
-    def __init__(self) -> None:
+class _Process: # for type hinting in Frame
+    def __init__(self, *args, **kwargs) -> None:
         raise NotImplementedError
     
     def draw(self) -> pygame.Surface:
         raise NotImplementedError
 
-    def handle_event(self) -> None:
+    def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int], keys: pygame.key.ScancodeWrapper) -> None:
         raise NotImplementedError
 
 text = TextHandler()
@@ -69,9 +69,13 @@ class Frame:
             self.drag = True
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self.drag = False
-        self.process.handle_event(event, mouse_pos)
-
+        
         keys = pygame.key.get_pressed()
+        if event.type == pygame.KEYDOWN and keys[pygame.K_ESCAPE]:
+                if keys[pygame.K_z]: self.close()
+                if keys[pygame.K_x]: self.mini()
+        else: 
+            self.process.handle_event(event, mouse_pos, keys)
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             # Check if the mouse click occurred within the top border of the window
@@ -91,9 +95,6 @@ class Frame:
             if self.drag:
                 # Update the position of the window based on the current mouse position and the drag_offset
                 self.update_pos(x=event.pos[0] - self.drag_offset[0], y=event.pos[1] - self.drag_offset[1])
-        
-        elif event.type == pygame.KEYDOWN and keys[pygame.K_ESCAPE] and keys[pygame.K_z]:
-            self.close()
 
     def update_pos(self, x: int = None, y: int = None, w: int = None, h: int = None) -> None:
         self.rect.topleft = ((x, self.rect.x)[x is None], (y, self.rect.y)[y is None])
@@ -111,6 +112,7 @@ class Frame:
     def mini(self) -> None:
         self.active = False
         self.minimize = True
+        self.rect.topleft = self.max_res
         self.refresh()
 
     def close(self) -> None:
@@ -123,11 +125,11 @@ class Frame:
     
     def restore(self) -> None:
         self.rect.topleft = self.default.topleft
-        self.rect.size = self.default.size
+        self.minimize = False
         self.refresh()
     
     def refresh(self) -> None:
-        if self.border: self.rect.size = (self.rect.w+2, self.rect.h + 31)
+        #if self.border: self.rect.size = (self.rect.w+2, self.rect.h + 31)
 
         self.surf = pygame.Surface(self.rect.size)
         size = self.rect.size
