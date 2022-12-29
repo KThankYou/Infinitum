@@ -1,5 +1,5 @@
 from Infinitum.Core.DesktopWindowManager.Window import _Process, Frame, _dummy_process
-from Infinitum.Core.Fonts.IOHandler import TextHandler
+from Infinitum.Core.Fonts.SimpleIO import TextHandler
 from typing import Tuple
 import pygame
 

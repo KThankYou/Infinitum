@@ -1,5 +1,4 @@
 from typing import Tuple, Callable, List
-
 import pygame, re, sys
 
 _FONT = {
@@ -116,7 +115,9 @@ class Button:
             hover_color: Tuple[int] = (200, 200, 200), border: bool = False, border_color: Tuple[int, int, int] = (0, 0, 0)) -> None:
 
         font = pygame.font.Font(Font, text_size)
+        self.text = text
         text_surf = font.render(text, True, text_color)
+        self.box_color = box_color
 
         button_surface = pygame.Surface((font.size(text)[0] + margin[0] * 2, text_size + margin[1] * 2))
         button_surface_hover = pygame.Surface((font.size(text)[0] + margin[0] * 2, text_size + margin[1] * 2))
@@ -138,6 +139,9 @@ class Button:
 
     def on_click(self, generator = False, *args, **kwargs):
         return self.function if generator else self.function(*args, **kwargs)
+
+    def __repr__(self) -> str:
+        return f'Button({self.text})'
 
     def draw(self) -> Tuple[pygame.Surface]:
         # Return the button surface and a rectangle representing the button
@@ -239,38 +243,4 @@ class TextBox:
     def get_text(self) -> str:
         return self.text
 
-class DropdownMenu:
-    def __init__(self, pos: Tuple[int, int], width: int, height: int, dropup: bool = False, buttons: List[Button] = [] ) -> None:
-        self.pos = pos
-        self.width = width
-        self.height = height
-        self.buttons = buttons
-        self.dropup = dropup
-        self.refresh()
-
-    def add_button(self, button: object) -> None:
-        self.buttons.append(button)
-        self.refresh()
-
-    def refresh(self) -> None:
-        self.surf = pygame.Surface((self.width, self.height))
-        self.rect = pygame.Rect(self.pos, self.surf.get_size())
-        if self.dropup:
-            self.rect.bottom = self.pos[1]
-        for button in self.buttons:
-            button.set_pos(self.rect.x, self.rect.y + self.height)
-            self.height += button.get_rect().height
-
-    def set_pos(self, pos: Tuple[int, int]) -> None:
-        self.pos = pos
-        self.refresh()
-
-    def draw(self) -> pygame.Surface:
-        self.surf.fill((255, 255, 255))
-        for button in self.buttons:
-            button_surf = button.draw()
-            self.surf.blit(button_surf, button.get_pos())
-        return self.surf
-
-pass
 
