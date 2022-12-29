@@ -17,7 +17,7 @@ class DesktopWindowManager:
     def draw(self):
         pygame.init()
         fps = pygame.time.Clock()
-        fps.tick(60)
+        fps.tick(30)
         disp, quit = pygame.display.set_mode((1600, 900)), False
         surf = pygame.Surface((1600, 900))
         self.active = None

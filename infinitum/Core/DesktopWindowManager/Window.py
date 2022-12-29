@@ -12,6 +12,8 @@ class _Process:
     def handle_event(self) -> None:
         raise NotImplementedError
 
+text = TextHandler()
+
 class Frame:
     def __init__(self, process: _Process, border: bool = True, fullscreen: bool = False, name: str = None,
                 pos: Tuple[int, int] = (0, 0), size: Tuple[int, int] = (0, 0), max_res: Tuple[int, int] = (1600, 900)) -> None:
@@ -19,15 +21,14 @@ class Frame:
         self.border = border
         self.fullscreen = fullscreen
         self.rect = pygame.Rect(*pos, *size)
-        self.text = TextHandler()
         self.name = name
         self.max_res = max_res
         self.alive = True
         self.active = self.drag = False
 
-        close_button = Button(' X ', Font= self.text.font, border = True, hover_color=pygame.Color('#C80815'), 
+        close_button = Button(' X ', Font= text.font, border = True, hover_color=pygame.Color('#C80815'), 
                                 function=self.close, text_size=16, border_color=(200,200,200))
-        mini_button = Button(' − ', Font= self.text.font, border = True, function=self.mini, text_size=16, border_color=(200,200,200))
+        mini_button = Button(' − ', Font= text.font, border = True, function=self.mini, text_size=16, border_color=(200,200,200))
         self.buttons = {'close': close_button, 'mini': mini_button}
 
         if self.border:
