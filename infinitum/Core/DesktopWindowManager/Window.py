@@ -13,6 +13,9 @@ class _Process:
         raise NotImplementedError
 
 text = TextHandler()
+caption = pygame.font.Font(text.font, 12)
+empty_surf = pygame.Surface((0,0))
+empty_rect = pygame.Rect(0, 0, 0, 0)
 
 class Frame:
     def __init__(self, process: _Process, border: bool = True, fullscreen: bool = False, name: str = None,
@@ -20,41 +23,43 @@ class Frame:
         self.process = process
         self.border = border
         self.rect = pygame.Rect(*pos, *size)
+        self.default = pygame.Rect(*pos, *size)
         self.alive = True
-        self.active = self.drag = False
+        self.minimize = self.active = self.drag = False
+        self.max_res = max_res
+        self.text_surf = caption.render(name, True, (255, 255, 255), (0,0,0))
 
         close_button = Button(' X ', Font= text.font, border = True, hover_color=pygame.Color('#C80815'), 
                                 function=self.close, text_size=16, border_color=(200,200,200))
+        maxi_button = Button(' + ', Font= text.font, border = True, function=self.maxi, text_size=16, border_color=(200,200,200))
         mini_button = Button(' − ', Font= text.font, border = True, function=self.mini, text_size=16, border_color=(200,200,200))
-        self.buttons = {'close': close_button, 'mini': mini_button}
+        restore_button = Button(' ^ ', Font= text.font, border = True, function=self.restore, text_size=16, border_color=(200,200,200))
+        self.buttons = {'close': close_button, 'maxi': maxi_button, 'mini': mini_button, 'restore': restore_button}
 
-        if self.border:
-            self.rect.size = (self.rect.w+2, self.rect.h + 31)
-
-        self.top_border = pygame.Rect(*self.rect.topleft, self.rect.right, 30)
-        self.surf = pygame.Surface(self.rect.size)
-        size = self.rect.size
-        if self.border: 
-            size = (max(self.rect.w-2, 0), max(self.rect.h-30, 0))
-            self.surf.fill((0, 0, 0))
-        self.display_surf = pygame.Surface(size)
+        if fullscreen:
+            self.rect.size = max_res
+            self.border = False
+        self.refresh()
         
     def draw(self) -> pygame.Surface:
-        for process_surf in self.process.draw():
-            pos = process_surf.get_rect()
-            pos.center = self.display_surf.get_rect().center
-            self.display_surf.blit(process_surf, pos)
+        if not self.minimize:
+            for process_surf in self.process.draw():
+                pos = process_surf.get_rect()
+                pos.center = self.display_surf.get_rect().center
+                self.display_surf.blit(process_surf, pos)
 
-            if self.border:
-                button_offset = 30
-                for button in self.buttons.values():
-                    pos = self.top_border.topright
-                    button.set_pos( *(pos[0] - button_offset, 0) )
-                    self.surf.blit(button.draw(), button.get_rect())
-                    button_offset += 30
-            
-            self.surf.blit(self.display_surf, (1, 30))
-            return self.surf
+                if self.border:
+                    self.surf.blit(self.text_surf, (self.top_border.x + 5, self.top_border.y + 3))
+                    button_offset = 30
+                    for button in self.buttons.values():
+                        pos = self.top_border.topright
+                        button.set_pos( *(pos[0] - button_offset, 0) )
+                        self.surf.blit(button.draw(), button.get_rect())
+                        button_offset += 30
+                
+                self.surf.blit(self.display_surf, (1, 30))
+                return self.surf
+        return empty_surf
 
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int], active: bool = True) -> None:
         if not active:
@@ -65,6 +70,8 @@ class Frame:
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self.drag = False
         self.process.handle_event(event, mouse_pos)
+
+        keys = pygame.key.get_pressed()
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             # Check if the mouse click occurred within the top border of the window
@@ -84,13 +91,16 @@ class Frame:
             if self.drag:
                 # Update the position of the window based on the current mouse position and the drag_offset
                 self.update_pos(x=event.pos[0] - self.drag_offset[0], y=event.pos[1] - self.drag_offset[1])
+        
+        elif event.type == pygame.KEYDOWN and keys[pygame.K_ESCAPE] and keys[pygame.K_z]:
+            self.close()
 
     def update_pos(self, x: int = None, y: int = None, w: int = None, h: int = None) -> None:
         self.rect.topleft = ((x, self.rect.x)[x is None], (y, self.rect.y)[y is None])
         self.rect.size = ((w, self.rect.size[0])[w is None] , (h, self.rect.size[1])[h is None])
     
     def get_rect(self) -> pygame.Rect:
-        return self.rect
+        return self.rect if not self.minimize else empty_rect
     
     def get_pos(self) -> Tuple[int, int]:
         return self.rect.topleft
@@ -100,10 +110,33 @@ class Frame:
 
     def mini(self) -> None:
         self.active = False
-        self.rect.size = (0, 0)
+        self.minimize = True
+        self.refresh()
 
     def close(self) -> None:
         self.alive = False
+
+    def maxi(self) -> None:
+        self.rect.topleft = (0, 0)
+        self.rect.size = self.max_res
+        self.refresh()
+    
+    def restore(self) -> None:
+        self.rect.topleft = self.default.topleft
+        self.rect.size = self.default.size
+        self.refresh()
+    
+    def refresh(self) -> None:
+        if self.border: self.rect.size = (self.rect.w+2, self.rect.h + 31)
+
+        self.surf = pygame.Surface(self.rect.size)
+        size = self.rect.size
+        if self.border: 
+            self.top_border = pygame.Rect(*self.rect.topleft, self.rect.right, 30)
+            size = (max(self.rect.w-2, 0), max(self.rect.h-30, 0))
+            self.surf.fill((0, 0, 0))
+        else: self.top_border = pygame.Rect(*self.rect.topleft, 0, 0)
+        self.display_surf = pygame.Surface(size)
 
 class _dummy_process:
     def __init__(self) -> None:

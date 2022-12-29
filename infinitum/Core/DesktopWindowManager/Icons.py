@@ -12,7 +12,7 @@ empty_rect = pygame.Rect(0,0,0,0)
 
 class Icon:
     def __init__(self, process: _Process, name: str = 'name_placeholder', process_size: Tuple[int, int] = (0, 0), 
-                    image: str = None, rect: pygame.Rect = empty_rect) -> None:
+                    image: str = None, rect: pygame.Rect = empty_rect, fullscreen: bool = False, max_res: Tuple[int, int] = (1600, 900)) -> None:
         self.image = default_image if image is None else pygame.image.load(image)
         self.process = process
         self.name = name[:15]
@@ -20,10 +20,12 @@ class Icon:
         self.rect = rect
         self.active = False
         self.process_size = process_size
+        self.fullscreen = fullscreen
+        self.max_res = max_res
 
     def launch(self) -> Frame:
         # Create a new window using the process associated with this icon
-        window = Frame(self.process(), name=self.name, size=self.process_size)
+        window = Frame(self.process(), name=self.name, size=self.process_size, fullscreen = self.fullscreen, max_res = self.max_res)
         return window
 
     def draw(self, surf: pygame.Surface, rect: pygame.Rect) -> pygame.Surface:
