@@ -114,99 +114,87 @@ class Button:
             text: str, Font: str, text_color: Tuple[int] = (255, 255, 255), box_color: Tuple[int] = (0, 0, 0),
             function: Callable = NOTHING, margin: Tuple[int] = (7, 7), text_size: Tuple[int] = 20, pos = (0, 0), border_size: int = 1,
             hover_color: Tuple[int] = (200, 200, 200), border: bool = False, border_color: Tuple[int, int, int] = (0, 0, 0)) -> None:
-        # Box_gap is the distance between the borders of the box and the text in px
-        self.text, self.function, self.text_color = text, function, text_color
-        self.margin, self.text_size, self.font = margin, text_size, Font
-        self.box_color, self.pos = box_color, pos
-        self.rect = pygame.Rect(0,0,0,0)
-        self.hover_color, self.hover = hover_color, False
-        self.border, self.border_color, self.border_size = border, border_color, border_size
+
+        font = pygame.font.Font(Font, text_size)
+        text_surf = font.render(text, True, text_color)
+
+        button_surface = pygame.Surface((font.size(text)[0] + margin[0] * 2, text_size + margin[1] * 2))
+        button_surface_hover = pygame.Surface((font.size(text)[0] + margin[0] * 2, text_size + margin[1] * 2))
+        button_surface.fill(box_color)
+        button_surface_hover.fill(hover_color)
+        if border:
+            rect = button_surface.get_rect()
+            pygame.draw.rect(button_surface, border_color, rect, border_size)
+            pygame.draw.rect(button_surface_hover, border_color, rect, border_size)
+        
+        text_pos = ((button_surface.get_width() - text_surf.get_width()) // 2, (button_surface.get_height() - text_surf.get_height()) // 2)
+        button_surface.blit(text_surf, text_pos) 
+        button_surface_hover.blit(text_surf, text_pos) 
+
+        self.rect = pygame.Rect(pos, button_surface.get_size())
+        self.button_surface, self.button_surface_hover = button_surface, button_surface_hover
+        self.function = function
+        self.hover = False
 
     def on_click(self, generator = False, *args, **kwargs):
         return self.function if generator else self.function(*args, **kwargs)
 
     def draw(self) -> Tuple[pygame.Surface]:
-        FONT = pygame.font.Font(self.font, self.text_size)
-        # Create an empty surface for the button
-        button_surface = pygame.Surface((FONT.size(self.text)[0] + self.margin[0] * 2, self.text_size + self.margin[1] * 2))
-        button_surface.fill(self.box_color if not self.hover else self.hover_color)
-        # Render the button text
-        text = FONT.render(self.text, True, self.text_color)
-
-        # Calculate the position of the text on the button surface
-        text_x = (button_surface.get_width() - text.get_width()) // 2
-        text_y = (button_surface.get_height() - text.get_height()) // 2
-        
-        if self.border:
-            rect = button_surface.get_rect()
-            pygame.draw.rect(button_surface, self.border_color, rect, self.border_size)
-
-        # Blit the rendered text onto the button surface
-        button_surface.blit(text, (text_x, text_y)) 
-
-        # Update the rect attribute to represent the boundaries of the button surface
-        self.rect = pygame.Rect(self.pos, button_surface.get_size())
-
         # Return the button surface and a rectangle representing the button
-        return button_surface
+        return (self.button_surface, self.button_surface_hover)[self.hover]
 
     def get_pos(self) -> Tuple[int]:
-        return self.pos
+        return self.rect.topleft
 
     def get_rect(self) -> pygame.Rect:
         return self.rect
-    
+
     def set_pos(self, x: int = None, y: int = None) -> None:
-        self.pos = (x or self.pos[0], y or self.pos[1])
-    
+        self.rect.topleft = (x or self.rect.x, y or self.rect.y)
+
 class TextBox:
     def __init__(self, 
-                 placeholder: str, font: str, text_color: Tuple[int] = (0, 0, 0), box_color: Tuple[int] = (255, 255, 255),
-                 size: Tuple[int] = (100, 30), text_size: Tuple[int] = 20, pos = (0, 0), password: bool = False,
-                 border_size: int = 1, border: bool = False, border_color: Tuple[int, int, int] = (0, 0, 0)) -> None:
-        self.placeholder = placeholder
-        self.font = font
-        self.text_color = text_color
-        self.box_color = box_color
-        self.size = size
-        self.text_size = text_size
-        self.pos = pos
-        self.text = ''
+            placeholder: str, font: str, text_color: Tuple[int] = (0, 0, 0), box_color: Tuple[int] = (255, 255, 255),
+            size: Tuple[int] = (100, 30), text_size: Tuple[int] = 20, pos = (0, 0), password: bool = False,
+            border_size: int = 1, border: bool = False, border_color: Tuple[int, int, int] = (0, 0, 0)) -> None:
+        self.rect = pygame.Rect(*pos, *size)
+        self.surf = pygame.Surface(size)
         self.active = False
         self.password = password
-        self.border, self.border_color, self.border_size = border, border_color, border_size
+        self.border = border
+        self.border_color = border_color
+        self.border_size = border_size
+        self.text = ''
+        self.font = pygame.font.Font(font, text_size)
+        self.box_color = box_color
+        self.text_color = text_color
+        self.placeholder = placeholder
 
     def draw(self) -> pygame.Surface:
-        # Set the font and font size
-        font = pygame.font.Font(self.font, self.text_size)
-        
+        self.surf.fill(self.box_color)
+        if self.border:
+            rect = self.surf.get_rect()
+            pygame.draw.rect(self.surf, (0,0,0), rect, 1)
         # If the text attribute is empty, use the placeholder text
         display_text = self.text or self.placeholder
         if self.text and self.password:
             display_text = '*'*len(self.text)
+
         # Calculate the width and height of the text box based on the font size
-        text_width, text_height = font.size(display_text)
-        box_width, box_height = self.size
-        
-        # Create the text box surface
-        surf = pygame.Surface(self.size)
-        
-        # Fill the text box surface with the box color
-        surf.fill(self.box_color)
-        
+        text_width, text_height = self.font.size(display_text)
+        box_width, box_height = self.rect.size
+
         # Render the text onto the text box surface
-        text_surface = font.render(display_text + ('|' if self.active else ''), True, self.text_color)
-        if self.border:
-            rect = surf.get_rect()
-            pygame.draw.rect(surf, (0,0,0), rect, 1)
+        text_surface = self.font.render(display_text + ('|' if self.active else ''), True, self.text_color)
+
         # Calculate the position of the text within the text box
         text_x = (box_width - text_width) // 2
         text_y = (box_height - text_height) // 2
         
         # Blit the text onto the text box surface
-        surf.blit(text_surface, (text_x, text_y))
+        self.surf.blit(text_surface, (text_x, text_y))
                 
-        return surf
+        return self.surf
     
     def typing(self) -> None:
         self.active = True
@@ -234,19 +222,55 @@ class TextBox:
         return self.draw()
     
     def set_pos(self, x: int = None, y: int = None) -> None:
-        self.pos = (x or self.pos[0], y or self.pos[1])
+        self.rect.topleft = (x or self.rect.x, y or self.rect.y)
 
     def get_pos(self) -> Tuple[int, int]:
-        return self.pos
+        return self.rect.topleft
 
-    def set_size(self, w: int = None, h: int = None):
-        self.size = (w or self.size[0], h or self.size[1])
+    def set_size(self, w: int = None, h: int = None) -> None:
+        self.rect.size = (w or self.rect.w, h or self.rect.h)
     
     def get_size(self) -> Tuple[int, int]:
-        return self.size
+        return self.rect.size
     
     def get_rect(self) -> pygame.Rect:
-        return pygame.Rect(*self.pos, *self.size)
+        return self.rect
 
-    def get_text(self):
+    def get_text(self) -> str:
         return self.text
+
+class DropdownMenu:
+    def __init__(self, pos: Tuple[int, int], width: int, height: int, dropup: bool = False, buttons: List[Button] = [] ) -> None:
+        self.pos = pos
+        self.width = width
+        self.height = height
+        self.buttons = buttons
+        self.dropup = dropup
+        self.refresh()
+
+    def add_button(self, button: object) -> None:
+        self.buttons.append(button)
+        self.refresh()
+
+    def refresh(self) -> None:
+        self.surf = pygame.Surface((self.width, self.height))
+        self.rect = pygame.Rect(self.pos, self.surf.get_size())
+        if self.dropup:
+            self.rect.bottom = self.pos[1]
+        for button in self.buttons:
+            button.set_pos(self.rect.x, self.rect.y + self.height)
+            self.height += button.get_rect().height
+
+    def set_pos(self, pos: Tuple[int, int]) -> None:
+        self.pos = pos
+        self.refresh()
+
+    def draw(self) -> pygame.Surface:
+        self.surf.fill((255, 255, 255))
+        for button in self.buttons:
+            button_surf = button.draw()
+            self.surf.blit(button_surf, button.get_pos())
+        return self.surf
+
+pass
+
