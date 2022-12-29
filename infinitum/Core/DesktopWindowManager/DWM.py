@@ -1,5 +1,5 @@
 from Infinitum.Core.Storage.FileManager import FileManager
-from Infinitum.Sys.StatusBar.Taskbar import Taskbar
+from Infinitum.Sys.Taskbar.main import Taskbar
 from Infinitum.Core.DesktopWindowManager.Window import Frame
 from Infinitum.Core.DesktopWindowManager.Icons import Icon, _dummy_icon_gen
 from typing import Tuple, List
@@ -102,6 +102,6 @@ class DesktopWindowManager:
         kwargs['rect'] = grid
         self.icons.append(icon_gen(**kwargs))
 
-def init(Threader, pwd: str):
-    dwm = DesktopWindowManager(Threader, pwd)
+def start(pwd: str):
+    dwm = DesktopWindowManager(pwd)
     dwm.draw()
