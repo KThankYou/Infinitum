@@ -1,7 +1,7 @@
 #Handle First time boot
 from typing import Tuple
 from Infinitum.Core.Bootstrapper.text import welcome, user_details, installation, installation_alt, install_success, install_fail
-from Infinitum.Core.Fonts.IOHandler import TextHandler, Button, TextBox
+from Infinitum.Core.Fonts.SimpleIO import TextHandler, Button, TextBox
 from Infinitum.Core.Storage.FileManager import FileManager
 import pygame, sys, re
 

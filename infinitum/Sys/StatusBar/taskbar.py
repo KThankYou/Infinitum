@@ -1,12 +1,14 @@
 from Infinitum.Core.DesktopWindowManager.Window import Frame
-from Infinitum.Core.Fonts.IOHandler import Button, DropdownMenu, TextHandler
+from Infinitum.Core.Fonts.SimpleIO import Button, TextHandler
+from Infinitum.Core.Fonts.CompoundIO import DropDownMenu
+
 from typing import Tuple, Dict
 import pygame, datetime
 
 text = TextHandler()
-_Shutdown = Button('Shutdown', Font=text.font, box_color=(200, 200, 200), text_size=18)
-_Restart = Button('Restart', Font=text.font, box_color=(200, 200, 200), text_size=18)
-_Lock = Button('Lock', Font=text.font, box_color=(200, 200, 200), text_size=18)
+_Shutdown = Button('Shutdown', Font=text.font, box_color=(200, 200, 200), text_size=14)
+_Restart = Button('Restart', Font=text.font, box_color=(200, 200, 200), text_size=14)
+_Install = Button('Install', Font=text.font, box_color=(200, 200, 200), text_size=14)
 font = pygame.font.Font(text.font, 18)
 _default_power = pygame.image.load(r'.\Infinitum\Sys\StatusBar\default_power.png')
 
@@ -16,11 +18,11 @@ class Taskbar:
         self.rect = pygame.Rect(0, display_res[1]-thickness, display_res[0], thickness)
         self.surf = pygame.Surface(self.rect.size)
         self.processes = processes
-        self.power_options = DropdownMenu(self.rect.topleft, 0, 0, dropup=True, buttons=[_Shutdown, _Restart, _Lock])
+        self.power_options = DropDownMenu(self.rect.topleft, dropup=True, buttons=[_Shutdown, _Restart, _Install])
         self.power_button_image = pygame.transform.smoothscale(power_image, (50, 50))
         self.power_button_rect = pygame.Rect((5, 5), (50, 50))
         self.color, self.alive = color, True
-        self.power_options_visible = False
+
         self.refresh()
 
     def add_process(self, image: pygame.Surface, process: Frame) -> None:
@@ -53,11 +55,6 @@ class Taskbar:
             if frame.alive:
                 thumbnail = pygame.transform.scale(thumbnail, (50, 50))
                 self.surf.blit(thumbnail, rect)
-        
-        self.power_options.set_pos((self.rect.right - self.power_options.width - 5, 5))
-        if self.power_options_visible: 
-            self.surf.blit(self.power_options.draw(), self.power_options.pos)
-        
         self.set_datetime()
         
         return self.surf
@@ -65,8 +62,8 @@ class Taskbar:
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> None:
         collision_rect = pygame.Rect(0, 0, 50, 50)
         collision_rect.x, collision_rect.y = self.rect.x, self.rect.y
-        if collision_rect.collidepoint(*mouse_pos):
-            self.power_options_visible = not self.power_options_visible
+        if collision_rect.collidepoint(*mouse_pos) and event.type == event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self.power_options.visible = True
         else:
             for _, frame in self.processes.keys():
                 collision_rect.x, collision_rect.y = self.rect.x+60, self.rect.y

@@ -1,4 +1,4 @@
-from Infinitum.Core.Fonts.IOHandler import Button, TextHandler
+from Infinitum.Core.Fonts.SimpleIO import Button, TextHandler
 from typing import Tuple
 import pygame
 
@@ -47,8 +47,9 @@ class Frame:
                 pos = process_surf.get_rect()
                 pos.center = self.display_surf.get_rect().center
                 self.display_surf.blit(process_surf, pos)
-
+                pos_ = (0, 0)
                 if self.border:
+                    pos_ = (1, 30)
                     self.surf.blit(self.text_surf, (self.top_border.x + 5, self.top_border.y + 3))
                     button_offset = 30
                     for button in self.buttons.values():
@@ -57,18 +58,19 @@ class Frame:
                         self.surf.blit(button.draw(), button.get_rect())
                         button_offset += 30
                 
-                self.surf.blit(self.display_surf, (1, 30))
+                self.surf.blit(self.display_surf, pos_)
                 return self.surf
         return empty_surf
 
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int], active: bool = True) -> None:
         if not active:
             return
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            self.drag_offset = (event.pos[0] - self.rect.left, event.pos[1] - self.rect.top)
-            self.drag = True
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            self.drag = False
+        if event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                self.drag_offset = (event.pos[0] - self.rect.left, event.pos[1] - self.rect.top)
+                self.drag = True
+            elif event.type == pygame.MOUSEBUTTONUP: 
+                self.drag = False
         
         keys = pygame.key.get_pressed()
         if event.type == pygame.KEYDOWN and keys[pygame.K_ESCAPE]:
@@ -125,12 +127,11 @@ class Frame:
     
     def restore(self) -> None:
         self.rect.topleft = self.default.topleft
+        self.rect.size = self.default.size
         self.minimize = False
         self.refresh()
     
     def refresh(self) -> None:
-        #if self.border: self.rect.size = (self.rect.w+2, self.rect.h + 31)
-
         self.surf = pygame.Surface(self.rect.size)
         size = self.rect.size
         if self.border: 

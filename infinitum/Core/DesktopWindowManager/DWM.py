@@ -1,5 +1,5 @@
 from Infinitum.Core.Storage.FileManager import FileManager
-from Infinitum.Sys.StatusBar.taskbar import Taskbar
+from Infinitum.Sys.StatusBar.Taskbar import Taskbar
 from Infinitum.Core.DesktopWindowManager.Window import Frame
 from Infinitum.Core.DesktopWindowManager.Icons import Icon, _dummy_icon_gen
 from typing import Tuple, List
@@ -11,7 +11,7 @@ _bg = r'.\Infinitum\Core\DesktopWindowManager\default_bg.jpg'
 class DesktopWindowManager:
     def __init__(self, Threader, pwd: str, windows: List[Frame] = [], icons: List[Icon] = []) -> None:
         self.FM = FileManager(r'.\Infinitum.vc', pwd) # Ignore
-        self.__threader = Threader # Ignore
+        #self.__threader = Threader # Ignore
         self.bg = pygame.image.load(_bg)
         self.icons, self.windows = icons, windows
         self.grid = pygame.Rect(50, 50, 128, 128)
@@ -53,16 +53,26 @@ class DesktopWindowManager:
                                 self.windows.remove(self.active)
                                 self.windows.append(self.active)
                             break
+                    
+                    else:
+                        if self.taskbar.power_options.visible:
+                            if self.taskbar.power_options.rect.collidepoint(*mouse_pos) and event.button == 1:
+                                self.active = self.taskbar.power_options
+                                mouse_in_window = True
+                            else: 
+                                self.taskbar.power_options.visible = False
+
                     if not mouse_in_window:
                         self.active = None
-                
+
                 if self.active is None: self.handle_event(event, mouse_pos)
                 else:
                     self.active.handle_event(event, mouse_pos)
                     # Update the position of the window if it is being dragged
                     if (self.taskbar not in (self.active, window)) and self.active.drag:
                         self.active.update_pos(x=mouse_pos[0] - window.drag_offset[0], y=mouse_pos[1] - window.drag_offset[1])
-
+                if self.taskbar.power_options.visible: 
+                    surf.blit(self.taskbar.power_options.draw(), self.taskbar.power_options.rect)
                 # Draw all alive windows
                 windows = []
                 for window in self.windows:
