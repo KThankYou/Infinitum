@@ -19,10 +19,7 @@ class Frame:
                 pos: Tuple[int, int] = (0, 0), size: Tuple[int, int] = (0, 0), max_res: Tuple[int, int] = (1600, 900)) -> None:
         self.process = process
         self.border = border
-        self.fullscreen = fullscreen
         self.rect = pygame.Rect(*pos, *size)
-        self.name = name
-        self.max_res = max_res
         self.alive = True
         self.active = self.drag = False
 
@@ -32,39 +29,38 @@ class Frame:
         self.buttons = {'close': close_button, 'mini': mini_button}
 
         if self.border:
-            self.rect.size = (self.rect.size[0]+2, self.rect.size[1] + 30)
+            self.rect.size = (self.rect.w+2, self.rect.h + 31)
 
-        rect = self.get_rect()
-        self.top_border = pygame.Rect(*rect.topleft, rect.right, 30)
-
+        self.top_border = pygame.Rect(*self.rect.topleft, self.rect.right, 30)
+        self.surf = pygame.Surface(self.rect.size)
+        size = self.rect.size
+        if self.border: 
+            size = (max(self.rect.w-2, 0), max(self.rect.h-30, 0))
+            self.surf.fill((0, 0, 0))
+        self.display_surf = pygame.Surface(size)
+        
     def draw(self) -> pygame.Surface:
-        surf = pygame.Surface(self.get_rect().size)
-        size = surf.get_size()
-        if self.border: size = (max(size[0]-2, 0), max(size[1]-30, 0))
-        display_surf = pygame.Surface(size)
         for process_surf in self.process.draw():
             pos = process_surf.get_rect()
-            pos.center = display_surf.get_rect().center
-            display_surf.blit(process_surf, pos)
+            pos.center = self.display_surf.get_rect().center
+            self.display_surf.blit(process_surf, pos)
 
             if self.border:
-                pygame.draw.rect(surface = surf, color=(0,0,0), rect=self.top_border)
-                pygame.draw.rect(surface = surf, color=(0,0,0), rect=pygame.Rect(self.rect.left, self.rect.bottom-1, self.rect.w, 1))
                 button_offset = 30
                 for button in self.buttons.values():
                     pos = self.top_border.topright
                     button.set_pos( *(pos[0] - button_offset, 0) )
-                    surf.blit(button.draw(), button.get_rect())
+                    self.surf.blit(button.draw(), button.get_rect())
                     button_offset += 30
             
-            surf.blit(display_surf, (1, 31))
-            return surf
+            self.surf.blit(self.display_surf, (1, 30))
+            return self.surf
 
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int], active: bool = True) -> None:
         if not active:
             return
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            self.drag_offset = (event.pos[0] - self.get_rect().left, event.pos[1] - self.get_rect().top)
+            self.drag_offset = (event.pos[0] - self.rect.left, event.pos[1] - self.rect.top)
             self.drag = True
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self.drag = False
@@ -80,7 +76,7 @@ class Frame:
                         button.on_click()
                 # Set the drag attribute to True and the drag_offset attribute to the offset between the top-left corner of the window and the mouse position
                 self.drag = True
-                self.drag_offset = (event.pos[0] - self.get_rect().left, event.pos[1] - self.get_rect().top)
+                self.drag_offset = (event.pos[0] - self.rect.left, event.pos[1] - self.rect.top)
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             # Set the drag attribute to False when the mouse button is released
             self.drag = False
@@ -103,6 +99,7 @@ class Frame:
         return self.rect.size
 
     def mini(self) -> None:
+        self.active = False
         self.rect.size = (0, 0)
 
     def close(self) -> None:

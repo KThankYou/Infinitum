@@ -9,7 +9,8 @@ def init():
     pygame.init()
     if not FileManager.check_install(r'.\Infinitum.vc'): return False
     login = Login()
-    pwd = login.main()
+    #pwd = login.main()
+    pwd = 'Kiran@2003'
 
     Threader = ThreadHandler()
     DWM.init(Threader=Threader, pwd = pwd)
