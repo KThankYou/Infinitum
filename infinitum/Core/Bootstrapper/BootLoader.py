@@ -9,7 +9,6 @@ def init():
     exit_code = 2
     while exit_code == 2:
         login = Login()
-        #pwd = login.main()
-        pwd = 'Abcd@123'
+        pwd = login.main()
         exit_code = start(pwd = pwd)
     return True
