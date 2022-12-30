@@ -1,5 +1,5 @@
-from Infinitum.Core.Storage.FileManager import FileManager as FM
 from Infinitum.Core.Fonts.SimpleIO import TextHandler, TextBox, Button
+from Infinitum.Core.Storage.FileManager import FileManager as FM
 import pygame, sys, hashlib
 
 _bg = r'.\Infinitum\Sys\Login\login_default.png'

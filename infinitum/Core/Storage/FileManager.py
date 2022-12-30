@@ -1,11 +1,10 @@
+from Infinitum.Core.Storage.MFT import MasterFileTable as MFT, MFT_size, BLOCKSIZE
+from Infinitum.Core.Storage.MBT import MasterBootTable as MBT, MBT_size
+from Infinitum.Core.Storage.Metadata import Metadata
 from typing import Tuple, Dict
 from hashlib import sha256
 from math import ceil
 import pickle, tempfile
-
-from Infinitum.Core.Storage.MBT import MasterBootTable as MBT, MBT_size
-from Infinitum.Core.Storage.MFT import MasterFileTable as MFT, MFT_size, BLOCKSIZE
-from Infinitum.Core.Storage.Metadata import Metadata
 
 RESERVED_SPACE = MBT_size + MFT_size
 

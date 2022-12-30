@@ -1,7 +1,7 @@
+from Infinitum.commons import font_18 as font, font_name as FONT
 from Infinitum.Core.DesktopWindowManager.Window import Frame
-from Infinitum.Core.Fonts.SimpleIO import Button, TextHandler
 from Infinitum.Core.Fonts.CompoundIO import DropDownMenu
-
+from Infinitum.Core.Fonts.SimpleIO import Button
 from typing import Tuple, Dict
 import pygame, datetime
 
@@ -21,11 +21,9 @@ class RESTART(Exception):
     def _raise(cls, *args, **kwargs):
         raise RESTART
 
-text = TextHandler()
-_Shutdown = Button('Shutdown', Font=text.font, box_color=(200, 200, 200), text_size=14, function= SHUTDOWN._raise)
-_Restart = Button('Restart', Font=text.font, box_color=(200, 200, 200), text_size=14, function= RESTART._raise)
-_Install = Button('Install', Font=text.font, box_color=(200, 200, 200), text_size=14)
-font = pygame.font.Font(text.font, 18)
+_Shutdown = Button('Shutdown', Font=FONT, box_color=(200, 200, 200), text_size=14, function= SHUTDOWN._raise)
+_Restart = Button('Restart', Font=FONT, box_color=(200, 200, 200), text_size=14, function= RESTART._raise)
+_Install = Button('Install', Font=FONT, box_color=(200, 200, 200), text_size=14)
 _default_power = pygame.image.load(r'.\Infinitum\Sys\Taskbar\default_power.png')
 
 class Taskbar:

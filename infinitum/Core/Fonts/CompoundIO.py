@@ -1,6 +1,7 @@
-from typing import List, Tuple, Dict
-from Infinitum.Core.Fonts.SimpleIO import Button
 from Infinitum.Core.DesktopWindowManager.Window import Frame
+from Infinitum.Core.Fonts.SimpleIO import Button
+from Infinitum.commons import empty_surf
+from typing import List, Tuple, Dict
 import pygame
 
 
@@ -9,7 +10,7 @@ class _Dropdown:
                 gap_color: Tuple[int, int, int], gap_size: int, *args, **kwargs) -> None:
         self.rect = pygame.Rect(0, 0, width, 0)
         self.default_height = height
-        self.surf = pygame.Surface((0, 0))
+        self.surf = empty_surf
         self.gap_color = gap_color
         self.gap_size = gap_size
         self.buttons = self.__get_rects(buttons)

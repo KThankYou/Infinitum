@@ -1,4 +1,5 @@
-from Infinitum.Core.Fonts.SimpleIO import Button, TextHandler
+from Infinitum.commons import font_18 as font, empty_rect, empty_surf, font_12 as caption
+from Infinitum.Core.Fonts.SimpleIO import Button
 from typing import Tuple
 import pygame, tempfile
 
@@ -11,11 +12,6 @@ class _Process: # for type hinting in Frame
 
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int], keys: pygame.key.ScancodeWrapper) -> None:
         raise NotImplementedError
-
-text = TextHandler()
-caption = pygame.font.Font(text.font, 12)
-empty_surf = pygame.Surface((0,0))
-empty_rect = pygame.Rect(0, 0, 0, 0)
 
 class Frame:
     def __init__(self, process: _Process, border: bool = True, fullscreen: bool = False, name: str = None,
@@ -30,11 +26,11 @@ class Frame:
         self.max_res = max_res
         self.text_surf = caption.render(name, True, (255, 255, 255), (0,0,0))
 
-        close_button = Button(' X ', Font= text.font, border = True, hover_color=pygame.Color('#C80815'), 
+        close_button = Button(' X ', Font= font, border = True, hover_color=pygame.Color('#C80815'), 
                                 function=self.close, text_size=16, border_color=(200,200,200))
-        maxi_button = Button(' + ', Font= text.font, border = True, function=self.maxi, text_size=16, border_color=(200,200,200))
-        mini_button = Button(' − ', Font= text.font, border = True, function=self.mini, text_size=16, border_color=(200,200,200))
-        restore_button = Button(' ^ ', Font= text.font, border = True, function=self.restore, text_size=16, border_color=(200,200,200))
+        maxi_button = Button(' + ', Font= font, border = True, function=self.maxi, text_size=16, border_color=(200,200,200))
+        mini_button = Button(' − ', Font= font, border = True, function=self.mini, text_size=16, border_color=(200,200,200))
+        restore_button = Button(' ^ ', Font= font, border = True, function=self.restore, text_size=16, border_color=(200,200,200))
         self.buttons = {'close': close_button, 'maxi': maxi_button, 'mini': mini_button, 'restore': restore_button}
 
         if fullscreen:

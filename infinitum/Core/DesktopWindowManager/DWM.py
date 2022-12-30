@@ -1,9 +1,8 @@
-from Infinitum.Core.Storage.FileManager import FileManager
 from Infinitum.Sys.Taskbar.Taskbar import Taskbar, SHUTDOWN, RESTART
 from Infinitum.Core.DesktopWindowManager.Window import Frame
+from Infinitum.Core.Storage.FileManager import FileManager
 from Infinitum.Core.DesktopWindowManager.Icons import Icon
 from typing import Tuple, List
-
 import pygame
 
 _bg = r'.\Infinitum\Core\DesktopWindowManager\default_bg.jpg'

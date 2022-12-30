@@ -1,9 +1,8 @@
+from Infinitum.Core.Storage.Metadata import Metadata
 from typing import BinaryIO, Dict, List, Optional
+from Infinitum.Core.Storage.MBT import MBT_size
 from math import ceil
 import pickle
-
-from Infinitum.Core.Storage.MBT import MBT_size
-from Infinitum.Core.Storage.Metadata import Metadata
 
 MFT_size = 1*1024*1024 # 1 MB
 BLOCKSIZE = 1024*1024//4 # .25 MB
@@ -25,7 +24,7 @@ class MasterFileTable:
 
     @classmethod
     def load(cls, file: BinaryIO) -> 'MasterFileTable':
-        file.seek(MFT_size, 0)
+        file.seek(MBT_size, 0)
         data = file.read(MFT_size)
         try: return pickle.loads(data.lstrip(b'0'))
         except: return cls({'root':{}}, {})

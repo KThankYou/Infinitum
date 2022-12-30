@@ -1,5 +1,3 @@
-import datetime
-
 class Metadata:
     def __init__(self, name: str, index: int, binary: bool, pointer: int, size: int = 0) -> None:
         self.__name = name

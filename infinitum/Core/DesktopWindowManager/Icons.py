@@ -1,13 +1,10 @@
 from Infinitum.Core.DesktopWindowManager.Window import _Process, Frame, _dummy_process
-from Infinitum.Core.Fonts.SimpleIO import TextHandler
+from Infinitum.commons import font_18 as font, empty_rect
 from typing import Tuple
 import pygame
 
 default_icon = r'.\Infinitum\Core\DesktopWindowManager\default_thumb.png'
 default_image = pygame.image.load(default_icon)
-
-font = pygame.font.Font(TextHandler().font, 18)
-empty_rect = pygame.Rect(0,0,0,0)
 
 
 class Icon:

@@ -1,11 +1,11 @@
 #Handle First time boot
-from typing import Tuple
 from Infinitum.Core.Bootstrapper.text import welcome, user_details, installation, installation_alt, install_success, install_fail
 from Infinitum.Core.Fonts.SimpleIO import TextHandler, Button, TextBox
 from Infinitum.Core.Storage.FileManager import FileManager
+from Infinitum.commons import empty_surf
+from typing import Tuple
 import pygame, sys, re
 
-empty_surf = pygame.Surface((0,0))
 password_pattern = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\d\s])\S{8,}$")
 text_color, button_color, X = (251,230,255), (118,0,183), 1150
 

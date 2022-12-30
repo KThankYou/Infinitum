@@ -1,7 +1,7 @@
 # Handle normal boot
 #from Infinitum.Core.Threading.Threading import ThreadHandler
-from Infinitum.Core.DesktopWindowManager.DWM import start
 from Infinitum.Core.Storage.FileManager import FileManager
+from Infinitum.Core.DesktopWindowManager.DWM import start
 from Infinitum.Sys.Login.Login import Login
 
 def init():
