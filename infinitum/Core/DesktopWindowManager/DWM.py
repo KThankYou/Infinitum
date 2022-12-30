@@ -1,7 +1,7 @@
 from Infinitum.Core.Storage.FileManager import FileManager
 from Infinitum.Sys.Taskbar.Taskbar import Taskbar, SHUTDOWN, RESTART
 from Infinitum.Core.DesktopWindowManager.Window import Frame
-from Infinitum.Core.DesktopWindowManager.Icons import Icon#, _dummy_icon_gen
+from Infinitum.Core.DesktopWindowManager.Icons import Icon
 from typing import Tuple, List
 
 import pygame
@@ -23,7 +23,6 @@ class DesktopWindowManager:
         disp, quit = pygame.display.set_mode((1600, 900)), False
         surf = pygame.Surface((1600, 900))
         self.active = None
-        #for _ in range(2): self.add_icon(_dummy_icon_gen, process_size = (480, 360)) # TODO: Remove this
         while not quit:
             pygame.display.flip()
             for event in pygame.event.get():
