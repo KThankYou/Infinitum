@@ -3,7 +3,7 @@
 from Infinitum.Core.Fonts.SimpleIO import TextHandler
 import pygame
 
-empty_surf = pygame.Surface(0,0,0,0)
+empty_surf = pygame.Surface((0, 0))
 empty_rect = pygame.Rect(0, 0, 0, 0)
 text = TextHandler()
 font_name = text.font

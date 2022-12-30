@@ -1,4 +1,4 @@
-from Infinitum.commons import font_18 as font, empty_rect, empty_surf, font_12 as caption
+from Infinitum.commons import font_name as font, empty_rect, empty_surf, font_12 as caption
 from Infinitum.Core.Fonts.SimpleIO import Button
 from typing import Tuple
 import pygame, tempfile
