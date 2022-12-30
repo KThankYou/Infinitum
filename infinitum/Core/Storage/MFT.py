@@ -1,10 +1,12 @@
 from typing import BinaryIO, Dict, List, Optional
+from math import ceil
 import pickle
 
 from Infinitum.Core.Storage.MBT import MBT_size
 from Infinitum.Core.Storage.Metadata import Metadata
 
 MFT_size = 1*1024*1024 # 1 MB
+BLOCKSIZE = 1024*1024//4 # .25 MB
 
 def modified(function):
     def helper(*args, **kwargs):
@@ -14,20 +16,18 @@ def modified(function):
     return helper
 
 class MasterFileTable:
-    def __init__(self, MFT: Dict, indices: Dict[int, int]) -> None:
+    def __init__(self, MFT: Dict, blocks: List[int]) -> None:
         self.__table = MFT
         self.__cwd = ('root', MFT['root'])
         self.__path = ['.']
         self.modified = False
-        self.index_sizes = indices
+        self.blocks = blocks # 0 = empty, 1 = filled, each block is of size BLOCKSIZE
 
     @classmethod
     def load(cls, file: BinaryIO) -> 'MasterFileTable':
-        pointer = file.tell()
         file.seek(MFT_size, 0)
         data = file.read(MFT_size)
-        file.seek(pointer)
-        try: return cls(*pickle.loads(data.lstrip(b'0')))
+        try: return pickle.loads(data.lstrip(b'0'))
         except: return cls({'root':{}}, {})
     
     @classmethod
@@ -36,14 +36,14 @@ class MasterFileTable:
             {'Apps': {'__files': {}}, 
             'User': {'__files': {}}, 
             '__files': {}}}
-        obj = cls(table, {})
+        obj = cls(table,[])
         obj.modified = True
         return obj
     
     def flush(self, file: BinaryIO) -> None:
         if self.modified:
             file.seek(MFT_size, 0)
-            file.write(pickle.dumps([self.__table, self.index_sizes]).zfill(MFT_size))
+            file.write(pickle.dumps(self).zfill(MFT_size))
             self.modified = False
         else: return 1
 
@@ -82,7 +82,6 @@ class MasterFileTable:
         self.__cwd, self.__path = c_dir, c_path
         if file_name in folder: return 1
         folder['__files'][file_name] = metadata
-        self.index_sizes[metadata.index] = metadata.size
     
     def exists(self, file_name: str, file_path: str | None) -> bool:
         c_dir, c_path = self.__cwd, self.__path
@@ -104,6 +103,7 @@ class MasterFileTable:
         self.set_cwd(path[:-1])
         folder, self.__cwd, self.__path = self.__cwd[1]['__files'], c_dir, c_path
         if file not in folder: return 1
+        self.del_metadata(folder[file])
         del folder[file]
 
     def parse_path(self, path: str) -> List[str]:
@@ -114,3 +114,92 @@ class MasterFileTable:
     @staticmethod
     def join(*args):
         return '\\'.join((i.rstrip('\\') for i in args))
+
+    def make_metadata(self, size: int, name: str, binary: bool) -> Metadata:
+        if size == 0: 
+            i = self.blocks.index(0)
+            meta = Metadata(name, i, binary, i*BLOCKSIZE)
+            self.blocks[i] = meta
+            return meta
+        zcount = ceil(size/BLOCKSIZE) - self.blocks.count(0)
+        if zcount > 0:
+            self.blocks += [0]*zcount
+        block_count = ceil(size/BLOCKSIZE)
+        head = None
+        for k, block in enumerate(self.blocks):
+            if block == 0:
+                head = Metadata(name, k, binary, i*BLOCKSIZE, size)
+                self.blocks[k] = head
+                block_count -= 1
+                break
+        
+        node, k = head, k+1
+        while block_count > 0:
+            if self.blocks[k] == 0:
+                self.blocks[k] = 1
+                node.add_block(k, k*BLOCKSIZE)
+                block_count -= 1 
+                k += 1
+
+        return head
+
+    def del_metadata(self, metadata: Metadata) -> None:
+        node = metadata.head
+        while node:
+            self.blocks[node.index] = 0
+            node = node.next
+
+    def consolidate(self) -> None:
+        blocks, node = [], None
+        for block in self.blocks:
+            if isinstance(block, Metadata):
+                node = block.head
+                pointer = len(blocks)*BLOCKSIZE
+                yield (node.pointer, pointer)
+                node.index, node.pointer = len(blocks), pointer
+                blocks.append(node)
+                node = node.next
+            if node:
+                while node:
+                    pointer = len(blocks)*BLOCKSIZE
+                    yield (node.pointer, pointer)
+                    node.index, node.pointer = len(blocks), pointer
+                    blocks.append(1)
+                    node = node.next
+                node = None
+        self.blocks = blocks 
+
+    def update_size(self, size: int, metadata: Metadata):
+        self.del_metadata(metadata)
+        if size == 0: 
+            i = self.blocks.index(0)
+            metadata.head.index = i
+            metadata.head.pointer = i*BLOCKSIZE
+            self.blocks[i] = metadata
+            return metadata
+
+        zcount = ceil(size/BLOCKSIZE) - self.blocks.count(0)
+        if zcount > 0:
+            self.blocks += [0]*zcount
+        block_count = ceil(size/BLOCKSIZE)
+        head = None
+        for k, block in enumerate(self.blocks):
+            if block == 0:
+                head = metadata.head
+                head.index, head.pointer = k, k*BLOCKSIZE
+                self.blocks[k] = metadata
+                block_count -= 1
+                k += 1
+                break
+    
+        while block_count > 0:
+            if self.blocks[k] == 0:
+                self.blocks[k] = 1
+                metadata.add_block(k, k*BLOCKSIZE)
+                block_count -= 1 
+                k += 1
+
+        metadata.size = size
+
+        return metadata
+

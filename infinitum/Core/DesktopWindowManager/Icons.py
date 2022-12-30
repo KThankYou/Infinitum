@@ -23,9 +23,9 @@ class Icon:
         self.fullscreen = fullscreen
         self.max_res = max_res
 
-    def launch(self) -> Frame:
+    def launch(self, working_dir: str) -> Frame:
         # Create a new window using the process associated with this icon
-        window = Frame(self.process(), name=self.name, size=self.process_size, fullscreen = self.fullscreen, max_res = self.max_res)
+        window = Frame(self.process, name=self.name, size=self.process_size, fullscreen = self.fullscreen, max_res = self.max_res, working_dir = working_dir)
         return window
 
     def draw(self, surf: pygame.Surface, rect: pygame.Rect) -> pygame.Surface:

@@ -1,6 +1,6 @@
 from Infinitum.Core.Fonts.SimpleIO import Button, TextHandler
 from typing import Tuple
-import pygame
+import pygame, tempfile
 
 class _Process: # for type hinting in Frame
     def __init__(self, *args, **kwargs) -> None:
@@ -19,8 +19,9 @@ empty_rect = pygame.Rect(0, 0, 0, 0)
 
 class Frame:
     def __init__(self, process: _Process, border: bool = True, fullscreen: bool = False, name: str = None,
-                pos: Tuple[int, int] = (0, 0), size: Tuple[int, int] = (0, 0), max_res: Tuple[int, int] = (1600, 900)) -> None:
-        self.process = process
+                pos: Tuple[int, int] = (0, 0), size: Tuple[int, int] = (0, 0), max_res: Tuple[int, int] = (1600, 900),
+                working_dir: str = tempfile.TemporaryDirectory().name, *args, **kwargs) -> None:
+        self.process = process(size = size, working_dir = working_dir, *args, **kwargs)
         self.border = border
         self.rect = pygame.Rect(*pos, *size)
         self.default = pygame.Rect(*pos, *size)
@@ -62,22 +63,21 @@ class Frame:
                 return self.surf
         return empty_surf
 
-    def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int], active: bool = True) -> None:
+    def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int], active: bool = True, *args, **kwargs) -> None:
         if not active:
             return
-        if event.button == 1:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                self.drag_offset = (event.pos[0] - self.rect.left, event.pos[1] - self.rect.top)
-                self.drag = True
-            elif event.type == pygame.MOUSEBUTTONUP: 
-                self.drag = False
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self.drag_offset = (event.pos[0] - self.rect.left, event.pos[1] - self.rect.top)
+            self.drag = True
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1: 
+            self.drag = False
         
         keys = pygame.key.get_pressed()
         if event.type == pygame.KEYDOWN and keys[pygame.K_ESCAPE]:
                 if keys[pygame.K_z]: self.close()
                 if keys[pygame.K_x]: self.mini()
         else: 
-            self.process.handle_event(event, mouse_pos, keys)
+            self.process.handle_event(event = event, mouse_pos = mouse_pos, keys = keys, *args, **kwargs)
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             # Check if the mouse click occurred within the top border of the window
@@ -142,7 +142,7 @@ class Frame:
         self.display_surf = pygame.Surface(size)
 
 class _dummy_process:
-    def __init__(self) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         self.running = True
         self.color = (0, 0, 0)
         self.colors = _dummy_process.COLORS()
@@ -162,5 +162,5 @@ class _dummy_process:
             for i in ((0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 255)):
                 yield i
 
-_dummy_window1 = Frame(_dummy_process(), size=(480, 360))
-_dummy_window2 = Frame(_dummy_process(), size=(480, 360))
+_dummy_window1 = Frame(_dummy_process, size=(480, 360))
+_dummy_window2 = Frame(_dummy_process, size=(480, 360))

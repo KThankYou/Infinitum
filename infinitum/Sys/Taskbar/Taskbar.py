@@ -5,12 +5,28 @@ from Infinitum.Core.Fonts.CompoundIO import DropDownMenu
 from typing import Tuple, Dict
 import pygame, datetime
 
+class SHUTDOWN(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+    @classmethod
+    def _raise(cls, *args, **kwargs):
+        raise SHUTDOWN
+
+class RESTART(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+    @classmethod
+    def _raise(cls, *args, **kwargs):
+        raise RESTART
+
 text = TextHandler()
-_Shutdown = Button('Shutdown', Font=text.font, box_color=(200, 200, 200), text_size=14)
-_Restart = Button('Restart', Font=text.font, box_color=(200, 200, 200), text_size=14)
+_Shutdown = Button('Shutdown', Font=text.font, box_color=(200, 200, 200), text_size=14, function= SHUTDOWN._raise)
+_Restart = Button('Restart', Font=text.font, box_color=(200, 200, 200), text_size=14, function= RESTART._raise)
 _Install = Button('Install', Font=text.font, box_color=(200, 200, 200), text_size=14)
 font = pygame.font.Font(text.font, 18)
-_default_power = pygame.image.load(r'.\Infinitum\Sys\StatusBar\default_power.png')
+_default_power = pygame.image.load(r'.\Infinitum\Sys\Taskbar\default_power.png')
 
 class Taskbar:
     def __init__(self, display_res: Tuple[int, int] = (1600, 900), thickness: int = 60, processes: Dict[Tuple[pygame.Surface, Frame], pygame.Rect] = {},
@@ -66,7 +82,7 @@ class Taskbar:
             self.power_options.visible = True
         else:
             for _, frame in self.processes.keys():
-                collision_rect.x, collision_rect.y = self.rect.x+60, self.rect.y
+                collision_rect.x = collision_rect.x+60
                 if collision_rect.collidepoint(*mouse_pos) and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if frame.minimize: frame.restore()
                     else: frame.mini()

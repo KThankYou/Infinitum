@@ -24,7 +24,6 @@ class MasterBootTable:
         config = {'username': user, 
                 'password': password,
                 'resolution': (1600, 900),
-                'file_index': 0,
                 'installed': False
                 }
         return cls(config)

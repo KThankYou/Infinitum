@@ -1,0 +1,2 @@
+class AppMon:
+    pass

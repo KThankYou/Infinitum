@@ -15,7 +15,7 @@ class Login:
         self.bg = pygame.image.load(_bg)
         self.password = ''
         config = FM.get_config(r'.\Infinitum.vc')
-        self.username = config['user']
+        self.username = config['username']
         self.res = config['resolution']
         self.pwd_hash = config['password']
 

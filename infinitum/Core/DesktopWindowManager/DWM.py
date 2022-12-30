@@ -1,7 +1,7 @@
 from Infinitum.Core.Storage.FileManager import FileManager
-from Infinitum.Sys.Taskbar.main import Taskbar
+from Infinitum.Sys.Taskbar.Taskbar import Taskbar, SHUTDOWN, RESTART
 from Infinitum.Core.DesktopWindowManager.Window import Frame
-from Infinitum.Core.DesktopWindowManager.Icons import Icon, _dummy_icon_gen
+from Infinitum.Core.DesktopWindowManager.Icons import Icon#, _dummy_icon_gen
 from typing import Tuple, List
 
 import pygame
@@ -9,24 +9,21 @@ import pygame
 _bg = r'.\Infinitum\Core\DesktopWindowManager\default_bg.jpg'
 
 class DesktopWindowManager:
-    def __init__(self, Threader, pwd: str, windows: List[Frame] = [], icons: List[Icon] = []) -> None:
-        self.FM = FileManager(r'.\Infinitum.vc', pwd) # Ignore
-        #self.__threader = Threader # Ignore
+    def __init__(self, pwd: str, windows: List[Frame] = [], icons: List[Icon] = []) -> None:
+        self.FM = FileManager(r'.\Infinitum.vc', pwd)
         self.bg = pygame.image.load(_bg)
-        self.icons, self.windows = icons, windows
+        self.icons, self.windows = list(icons), list(windows)
         self.grid = pygame.Rect(50, 50, 128, 128)
         self.taskbar = Taskbar()
         self.windows.append(self.taskbar)
 
-    def draw(self):
-        pygame.init()
+    def main(self):
         fps = pygame.time.Clock()
         fps.tick(30)
         disp, quit = pygame.display.set_mode((1600, 900)), False
         surf = pygame.Surface((1600, 900))
         self.active = None
-        #_dummy_icon_gen()
-        for _ in range(2): self.add_icon(_dummy_icon_gen, process_size = (480, 360))
+        #for _ in range(2): self.add_icon(_dummy_icon_gen, process_size = (480, 360)) # TODO: Remove this
         while not quit:
             pygame.display.flip()
             for event in pygame.event.get():
@@ -67,29 +64,32 @@ class DesktopWindowManager:
 
                 if self.active is None: self.handle_event(event, mouse_pos)
                 else:
-                    self.active.handle_event(event, mouse_pos)
+                    try: self.active.handle_event(event, mouse_pos)
+                    except SHUTDOWN: return self.shutdown(0)
+                    except RESTART: return self.shutdown(2)
                     # Update the position of the window if it is being dragged
                     if (self.taskbar not in (self.active, window)) and self.active.drag:
                         self.active.update_pos(x=mouse_pos[0] - window.drag_offset[0], y=mouse_pos[1] - window.drag_offset[1])
                 if self.taskbar.power_options.visible: 
                     surf.blit(self.taskbar.power_options.draw(), self.taskbar.power_options.rect)
                 # Draw all alive windows
-                windows = []
+                windows, process_num = [], 0
                 for window in self.windows:
                     if window.alive:
+                        process_num += 1
                         windows.append(window)
                         surf.blit(window.draw(), window.get_rect())
                 self.windows = windows
+                self.taskbar.process_num = process_num
 
                 disp.blit(surf, (0,0))
                 pygame.display.update()
-        pygame.quit()
 
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             for icon in self.icons:
                 if icon.rect.collidepoint(*mouse_pos):
-                    process = icon.launch()
+                    process = icon.launch(self.FM.temp())
                     self.windows.append(process)
                     self.taskbar.add_process(icon.image, process)
     
@@ -101,7 +101,13 @@ class DesktopWindowManager:
         self.grid = pygame.Rect(x + 150, y, size, size)
         kwargs['rect'] = grid
         self.icons.append(icon_gen(**kwargs))
+    
+    def shutdown(self, code = 0):
+        self.FM.close()
+        return code
 
 def start(pwd: str):
     dwm = DesktopWindowManager(pwd)
-    dwm.draw()
+    return dwm.main()
+    
+ 

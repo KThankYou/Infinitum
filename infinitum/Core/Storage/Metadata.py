@@ -1,17 +1,28 @@
 import datetime
 
-class Metadata: #Default size allocated for a single file is 5mb
-    def __init__(self, name: str, date_mod: datetime.datetime, index: int, binary: bool, size: int = 1024*1024*5) -> None:
-        self.__name, self.__size, self.__date_mod = name, size, date_mod
-        self.__index, self.__binary = index, binary
+class Metadata:
+    def __init__(self, name: str, index: int, binary: bool, pointer: int, size: int = 0) -> None:
+        self.__name = name
+        self.__binary = binary
+        self.__head = Block(index, pointer)
+        self.size = size
+
+    def add_block(self, index: int, pointer: int):
+        node = self.__head
+        while node.next is not None:
+            node = node.next
+        node.next = Block(index, pointer)
 
     @property
-    def name(self): return self.__name
+    def name(self) -> str: return self.__name
     @property
-    def size(self): return self.__size
+    def binary(self) -> bool: return self.__binary
     @property
-    def date_mod(self): return self.__date_mod
-    @property
-    def index(self): return self.__index
-    @property
-    def binary(self): return self.__binary
+    def head(self) -> 'Block': return self.__head
+        
+
+class Block:
+    def __init__(self, index: int = 0, pointer: int = 0) -> None:
+        self.next = None
+        self.pointer = pointer
+        self.index = index
