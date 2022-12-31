@@ -22,7 +22,6 @@ These instructions will get you a copy of the project up and running on your loc
 - Python 3.11.x (Tested only on 3.11)
 - pygame
 <br>
-
 ### __Installation__
 
 Step-by-step instructions for setting up the project on your local machine.
@@ -137,6 +136,7 @@ In the `handle_event` method, `rect` is provided only if your window is set to b
 
 ### __Example__
 The following programs were designed as part of the project:
+<br>
 Chess: https://github.com/KThankYou/Chess/tree/Infinitum-ver by [Gin](https://github.com/KThankYou/)
 
 ## __Built With__
