@@ -21,7 +21,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 - Python 3.11.x (Tested only on 3.11)
 - pygame
-<br>
+
 ### __Installation__
 
 Step-by-step instructions for setting up the project on your local machine.
