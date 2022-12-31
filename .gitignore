@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 infinitum.vc
+infinitum.vc.bak
+debug.txt

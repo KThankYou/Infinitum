@@ -2,11 +2,14 @@
 from Infinitum.Core.Bootstrapper.text import welcome, user_details, installation, installation_alt, install_success, install_fail
 from Infinitum.Core.Fonts.SimpleIO import TextHandler, Button, TextBox
 from Infinitum.Core.Storage.FileManager import FileManager
+from Infinitum.CONSTANTS import Pattern_Password
 from Infinitum.commons import empty_surf
-from typing import Tuple
-import pygame, sys, re
 
-password_pattern = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\d\s])\S{8,}$")
+from typing import Tuple
+
+import pygame
+import sys
+
 text_color, button_color, X = (251,230,255), (118,0,183), 1150
 
 def draw_text(txt: str, font: pygame.font.Font, color: Tuple, surface: pygame.Surface, x: int, y: int, styles = None):
@@ -162,7 +165,7 @@ class Installer:
             yield surf
 
     def phase3(self): #Confirmation
-        if not self.username or not password_pattern.search(self.password): 
+        if not self.username or not Pattern_Password.search(self.password): 
             self.context, finished = self.phase3_alt, True
             return empty_surf
 

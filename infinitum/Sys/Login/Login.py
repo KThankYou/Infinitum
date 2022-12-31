@@ -1,6 +1,9 @@
 from Infinitum.Core.Fonts.SimpleIO import TextHandler, TextBox, Button
 from Infinitum.Core.Storage.FileManager import FileManager as FM
-import pygame, sys, hashlib
+
+import hashlib
+import pygame
+import sys 
 
 _bg = r'.\Infinitum\Sys\Login\login_default.png'
 _pfp = r'.\Infinitum\Sys\Login\login_default_pfp.png'
@@ -11,13 +14,14 @@ def _hash(string: str) -> str:
     return hashlib.sha256(hashlib.sha256(string.encode()).hexdigest().encode()).hexdigest()
 
 class Login:
-    def __init__(self) -> None:
+    def __init__(self, display: pygame.Surface) -> None:
         self.bg = pygame.image.load(_bg)
         self.password = ''
         config = FM.get_config(r'.\Infinitum.vc')
         self.username = config['username']
-        self.res = config['resolution']
         self.pwd_hash = config['password']
+
+        self.DISPLAY = display
 
         # Circular pfp
         pfp = pygame.image.load(_pfp)
@@ -29,12 +33,11 @@ class Login:
     def main(self) -> None:
         fps = pygame.time.Clock()
         fps.tick(30)
-        display = pygame.display.set_mode(self.res)
 
         while not self.password:
             pygame.display.flip()
             for screen in self.draw():
-                display.blit(screen, (0, 0))
+                self.DISPLAY.blit(screen, (0, 0))
                 pygame.display.update()
         return self.password
 
@@ -48,7 +51,7 @@ class Login:
 
         while not finished:
             self.text.reset_pos()
-            surf = pygame.Surface(self.res)
+            surf = pygame.Surface(self.DISPLAY.get_size())
 
             surf.blit(self.bg, (0,0)) # Draw Background
 
@@ -100,6 +103,6 @@ class Login:
                     self.password = password_box.get_text()
             yield surf
     
-    def check_password(self):
+    def check_password(self) -> bool:
         return _hash(self.password) == self.pwd_hash
         

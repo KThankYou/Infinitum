@@ -1,4 +1,5 @@
 # some common stuff a few files use
+# moved here as to give slightly more performance
 
 from Infinitum.Core.Fonts.SimpleIO import TextHandler
 import pygame

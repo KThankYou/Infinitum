@@ -1,9 +1,10 @@
 from Infinitum.Core.DesktopWindowManager.Window import Frame
-from Infinitum.Core.Fonts.SimpleIO import Button
+from Infinitum.TYPEHINTS import Button
 from Infinitum.commons import empty_surf
-from typing import List, Tuple, Dict
-import pygame
 
+from typing import List, Tuple, Dict
+
+import pygame
 
 class _Dropdown:
     def __init__(self, width: int, height: int, buttons: List[Button],
@@ -39,9 +40,11 @@ class _Dropdown:
 
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int], abs_pos: pygame.Rect, *args, **kwargs) -> None:
         for button, rect in self.buttons.items():
-            collision = rect.collidepoint(mouse_pos[0], mouse_pos[1] - abs_pos.y + rect.y)
+            collision_rect = pygame.Rect(abs_pos.x+rect.x, abs_pos.y+rect.y, rect.w, rect.h-rect.y)
+            collision = collision_rect.collidepoint(mouse_pos[0], mouse_pos[1])
             if collision and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 button.on_click()
+                return
 
 class DropDownMenu:
     def __init__(self, pos: Tuple[int, int], width: int = 200, height: int = 30, dropup: bool = False, 

@@ -1,26 +1,25 @@
-from typing import BinaryIO, Dict
-import pickle, hashlib
+from Infinitum.CONSTANTS import MBT_SIZE
 
-MBT_size = 1024*1024//2 # 0.5 MB
+from typing import BinaryIO, Dict
+
+import hashlib
+import pickle
 
 class MasterBootTable:
     def __init__(self, config: Dict) -> None:
         self.config = config
 
     @classmethod
-    def load(cls, file: BinaryIO):
-        pointer = file.tell()
+    def load(cls, file: BinaryIO) -> 'MasterBootTable':
         file.seek(0)
-        data = file.read(MBT_size)
-        file.seek(pointer)
-        try: return cls(pickle.loads(data.lstrip(b'0')))
-        except: return cls({'installed': False})
+        data = file.read(MBT_SIZE)
+        return pickle.loads(data.lstrip(b'0'))
     
     @classmethod
-    def make_MBT(cls, user: str, password: str):
+    def make_MBT(cls, user: str, password: str) -> 'MasterBootTable':
         # Hash of password is used to encrypt
-        for _ in range(2): # Hash of Hash is used for password check
-            password = hashlib.sha256(password.encode()).hexdigest()
+        # Hash of Hash is used for password check
+        for _ in range(2): password = hashlib.sha256(password.encode()).hexdigest()
         config = {'username': user, 
                 'password': password,
                 'resolution': (1600, 900),
@@ -30,7 +29,7 @@ class MasterBootTable:
     
     def flush(self, file: BinaryIO) -> None:
         file.seek(0)
-        file.write(pickle.dumps(self.config).zfill(MBT_size))
+        file.write(pickle.dumps(self).zfill(MBT_SIZE))
     
     def installed(self) -> None:
         self.config['installed'] = True

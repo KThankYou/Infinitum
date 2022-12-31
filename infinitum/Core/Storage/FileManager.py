@@ -1,22 +1,25 @@
-from Infinitum.Core.Storage.MFT import MasterFileTable as MFT, MFT_size, BLOCKSIZE
-from Infinitum.Core.Storage.MBT import MasterBootTable as MBT, MBT_size
+from Infinitum.CONSTANTS import MFT_SIZE, MBT_SIZE, BLOCKSIZE, RESERVED_SPACE
+from Infinitum.Core.Storage.MFT import MasterFileTable as MFT
+from Infinitum.Core.Storage.MBT import MasterBootTable as MBT
 from Infinitum.Core.Storage.Metadata import Metadata
-from typing import Tuple, Dict
+
+from typing import Tuple, Dict, BinaryIO
 from hashlib import sha256
 from math import ceil
-import pickle, tempfile
 
-RESERVED_SPACE = MBT_size + MFT_size
+import tempfile
+import pickle
+
 
 class FileManager:
     def __init__(self, drive_path: str, pwd: str) -> None:
         self.drive, self.working_dir = open(drive_path, 'rb+'), tempfile.TemporaryDirectory()
-        self.MBT, self.MFT = MBT.load(self.drive), MFT.load(self.drive)
-        key = sha256(pwd.encode()).hexdigest()
+        key, self.MBT = sha256(pwd.encode()).hexdigest(), MBT.load(self.drive)
         if sha256(key.encode()).hexdigest() != self.MBT.config['password']: raise ValueError('Incorrect Password')
-        self.__key = key
+        self.key = key
+        self.MFT = MFT.load(self)
 
-    def temp(self): 
+    def temp(self) -> tempfile.TemporaryDirectory: 
         return tempfile.TemporaryDirectory(dir = self.working_dir.name)
 
     @staticmethod
@@ -49,72 +52,105 @@ class FileManager:
     def initial_setup(cls, drive_path: str, username: str, password: str ) -> 'FileManager':
         with open(drive_path, 'wb+') as drive:
             MBT_, MFT_ = MBT.make_MBT(username, password), MFT.make_MFT()
-            MBT_.flush(drive); MFT_.flush(drive)
+            MBT_.flush(drive); MFT_.flush(FileManager, drive, sha256(password.encode()).hexdigest())
         return cls(drive_path, password)
 
     # file_path is the location inside the app
-    def __create_file(self, file_name: str, file_path: str, binary: bool) -> None:
-        metadata = self.MFT.make_metadata(0, file_name, binary)
+    def __create_file(self, file_name: str, file_path: str) -> None:
+        metadata = self.MFT.make_metadata(0, file_name)
         fail = self.MFT.make_file(file_name, metadata, file_path)
         if fail: return 1
 
-    def write(self, data: object | str, metadata: Metadata) -> None:
-        node, data = metadata.head, pickle.dumps(data)
-        data = self.__encrypt(data)
-        blocks = ceil(len(data)//BLOCKSIZE)*BLOCKSIZE
+    def write(self, obj: object, metadata: Metadata) -> None:
+        node, raw_data = metadata.head, pickle.dumps(obj)
+        data = FileManager.encrypt(raw_data, self.key)
+        blocks = ceil(len(data)/BLOCKSIZE)*BLOCKSIZE
         data = data.zfill(blocks)
         if metadata.size < len(data): self.MFT.update_size(metadata, len(data))
         for size in range(0, blocks, BLOCKSIZE):
             self.drive.seek(RESERVED_SPACE + node.pointer, 0)
             self.drive.write(data[size:size+BLOCKSIZE])
             node = node.next
-        return data.decode() if not metadata.binary else pickle.loads(data)
 
-    def write_open(self, file_name: str, file_path: str = None, binary: bool = False) -> 'WriteIO': 
+    @staticmethod
+    def write_MFT(drive: BinaryIO, pwd: str, obj: object):
+        data = FileManager.encrypt(pickle.dumps(obj), pwd = pwd)
+        drive.seek(MBT_SIZE, 0)
+        drive.write(data.zfill(MFT_SIZE))
+        drive.flush()
+
+    @staticmethod
+    def read_MFT(drive: BinaryIO, pwd: str) -> MFT:
+        drive.seek(MBT_SIZE, 0)
+        encrypted = drive.read(MFT_SIZE)
+        data = FileManager.decrypt(encrypted.strip(b'0'), pwd)
+        return pickle.loads(data)
+
+    def write_open(self, file_name: str, file_path: str = '') -> 'WriteIO': 
         if self.MFT.exists(file_name, file_path): self.MFT.del_file(file_path)
-        self.__create_file(file_name, file_path, binary)
-        self.MFT.flush()
-        file = self, self.MFT.get_file(file_path, file_name)
+        self.__create_file(file_name, file_path)
+        self.MFT.flush(self, self.drive, password=self.key)
+        file = self, self.MFT.get_file(file_name, file_path)
         return WriteIO(*file)
     
-    def read_open(self, file_name: str, file_path: str = None) -> 'ReadIO':
+    def read_open(self, file_name: str, file_path: str = '') -> 'ReadIO':
         if not self.MFT.exists(file_name, file_path): raise Exception('File Does not Exist')
-        file = self, self.MFT.get_file(file_path, file_name)
+        file = self, self.MFT.get_file(file_name, file_path)
         return ReadIO(*file)
     
-    def read(self, metadata: Metadata) -> str | object:
+    def read(self, metadata: Metadata) -> object:
         node, data = metadata.head, b''
         while node:
             data += self.__read_bytes(BLOCKSIZE, RESERVED_SPACE + node.pointer)
             node = node.next
-        data = self.__decrypt(data)
-        return data.decode() if not metadata.binary else pickle.loads(data)
+        data = self.decrypt(data.lstrip(b'0'), self.key)
+        return pickle.loads(data)
     
     def __read_bytes(self, Bytes: int, pointer: int) -> bytes:
         self.drive.seek(pointer, 0)
         return self.drive.read(Bytes)
 
-    def __encrypt(self, data: bytes) -> bytes:
-        result, key = [], 0
-        for index in range(len(data)):
-            result[index] += ord(self.__key[key])
+    @staticmethod
+    def encrypt(data: bytes, pwd: str) -> bytes:
+        result, key = list(data), 0
+        for index in range(len(result)):
+            result[index] += ord(pwd[key])
             key += 1
-            if key >= len(self.__key): key = 0
+            if key >= len(pwd): key = 0
         return pickle.dumps(result)
 
-    def __decrypt(self, data: bytes) -> bytes:
-        encrypted, decrypted = pickle.loads(data), []
-        for index in range(len(encrypted)):
-            decrypted[index] -= ord(self.__key[key])
+    @staticmethod
+    def decrypt(data: bytes, pwd: str) -> bytes:
+        decrypted, key = list(pickle.loads(data)), 0
+        for index in range(len(decrypted)):
+            decrypted[index] -= ord(pwd[key])
             key += 1
-            if key >= len(self.__key): key = 0
+            if key >= len(pwd): key = 0
         return bytes(decrypted)
 
-    def close(self):
+    def flush(self) -> None:
         self.MBT.flush(self.drive)
-        self.MFT.flush(self.drive)
+        self.MFT.flush(self, self.drive, self.key)
+        self.drive.flush()
+
+    def close(self) -> None:
+        self.flush()
         self.working_dir.cleanup()
         self.drive.close()
+
+    def make_folder(self, folder_name: str, folder_path: str, overwrite: bool = False) -> str:
+        path = self.MFT.make_dir(folder_name, folder_path)
+        if path == 1: 
+            if not overwrite: raise Exception('Folder already exists')
+            self.del_folder(folder_name, folder_path)
+            path = self.MFT.make_dir(folder_name, folder_path)
+        return path
+    
+    def del_folder(self, folder_name: str, folder_path: str) -> None:
+        self.MFT.del_dir(folder_name, folder_path)
+    
+    def get_apps(self) -> Dict[str, Metadata]:
+        return self.MFT.get_apps()
 
 def __open__(function): # Decor to check if handle is closed
     def helper(*args, **kwargs):
@@ -134,12 +170,12 @@ class WriteIO:
 
     @__open__
     def flush(self):
-        self.manager.write(self.data, self.metadata)
+        self.manager.flush()
 
     @__open__
     def close(self):
-        self.closed = True
         self.flush()
+        self.closed = True
 
 class ReadIO:
     def __init__(self, manager: FileManager, metadata: Metadata) -> None:
