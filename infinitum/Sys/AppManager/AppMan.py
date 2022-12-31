@@ -63,7 +63,7 @@ resizeable = <bool>
 
 '''
 
-class Installer:
+class AppMan:
     def __init__(self, FM: FileManager, max_res: Tuple[int, int] = (1600, 900),paths: List[str] = []) -> None:
         self.FileManager = FM
         self.paths = list(paths)

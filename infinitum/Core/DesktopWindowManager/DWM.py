@@ -1,6 +1,6 @@
 from Infinitum.Sys.Taskbar.Taskbar import Taskbar, SHUTDOWN, RESTART
 from Infinitum.Core.Storage.FileManager import FileManager
-from Infinitum.Sys.AppManager.Installer import Installer
+from Infinitum.Sys.AppManager.AppMan import AppMan
 from Infinitum.TYPEHINTS import Frame, Icon
 
 from typing import Tuple, List
@@ -16,8 +16,8 @@ class DesktopWindowManager:
         self.icons, self.windows = list(icons), list(windows)
         self.grid = pygame.Rect(50, 50, 128, 128)
         self.display = display
-        self.installer = Installer(self.FM, max_res = display.get_size())
-        self.taskbar = Taskbar(install=self.installer.install)
+        self.AppMan = AppMan(self.FM, max_res = display.get_size())
+        self.taskbar = Taskbar(install=self.AppMan.install)
         self.windows.append(self.taskbar)
 
 

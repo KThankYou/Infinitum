@@ -7,8 +7,6 @@ This installer will guide you through the process of setting up an Encrypted Vir
 Please be aware that this software is released under the Unlicense, which means that it is provided "as is" without any warranties or conditions of any kind. You are free to use, modify, and distribute the software as you see fit, but we cannot be held responsible for any issues that may arise from its use.
 
 With that said, we hope you find the software useful and we encourage you to fork the project if you have any improvements or enhancements to share at https://github.com/KThankYou/Infinitum.
-
-This was made as a college project for our first sem in VIT Chennai by .........
 '''
 
 _user_details1 = 'User Information'
