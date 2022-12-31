@@ -1,4 +1,16 @@
-DUMMY_TEXT1 = 'Sequi voluptatem vel sit delectus necessitatibus ea nihil reprehenderit. Voluptatem aut perspiciatis ut molestiae perspiciatis porro totam. Temporibus excepturi corporis vel alias quidem. Excepturi beatae et dignissimos excepturi sequi repudiandae omnis. Blanditiis et ipsam officiis neque recusandae qui non qui.'
+# for some constant values that a few files use, useful to be wary of circular imports
+import re
+
+MBT_SIZE = 1024*1024//2 # 0.5 MB
+MFT_SIZE = 1*1024*1024 # 1 MB
+BLOCKSIZE = 1024*1024//4 # .25 MB
+RESERVED_SPACE = MBT_SIZE + MFT_SIZE
+
+Pattern_TextHandler = re.compile(r'(\n|[^\s]+)|(?: ( +) )')
+Pattern_Password = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\d\s])\S{8,}$")
+
+DUMMY_TEXT1 = '''
+Sequi voluptatem vel sit delectus necessitatibus ea nihil reprehenderit. Voluptatem aut perspiciatis ut molestiae perspiciatis porro totam. Temporibus excepturi corporis vel alias quidem. Excepturi beatae et dignissimos excepturi sequi repudiandae omnis. Blanditiis et ipsam officiis neque recusandae qui non qui.'''
 
 DUMMY_TEXT2 = '''
 Omnis error dolor consequatur quia sunt quasi. Iure necessitatibus nobis natus hic incidunt officia. Rerum est non nemo laborum. Necessitatibus in assumenda pariatur saepe temporibus nostrum error eveniet. Dolorum quo dolores quaerat aut nulla laudantium excepturi et. Non in temporibus sunt.

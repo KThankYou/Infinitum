@@ -1,12 +1,15 @@
+from Infinitum.CONSTANTS import Pattern_TextHandler
+
 from typing import Tuple, Callable, List
-import pygame, re, sys
+
+import pygame
+import sys
 
 _FONT = {
     'OpenSans': r'.\Infinitum\Core\Fonts\OpenSans\OpenSans-VariableFont_wdth,wght.ttf',
     
     }
 
-_P = re.compile(r'(\n|[^\s]+)|(?: ( +) )')
 
 _KWARGS = {
         # U = underline, B = bold, I = Italic, S = Strikethrough
@@ -40,8 +43,7 @@ class TextHandler:
         self.__default_pos = self.pointer = starting
 
     # U = underline, B = bold, I = Italic, S = Strikethrough
-    def write(self, 
-        text: str, color: tuple | pygame.Color, surface: pygame.Surface, size: int = None, width: bool = None,
+    def write(self, text: str, color: tuple | pygame.Color, surface: pygame.Surface, size: int = None, width: bool = None,
         U: bool = False, B: bool = False, I: bool = False, S: bool = False, newline_width: int = 20, special_flags: List = 0) -> None:
 
         if not isinstance(size, int) or size <= 0: raise ValueError('Size must be a positive integer')
@@ -56,7 +58,7 @@ class TextHandler:
         elif width <= 0: raise ValueError('Width must be a positive integer')
         
         # Split the text into words
-        words = [max(word) for word in _P.findall(text)]
+        words = [max(word) for word in Pattern_TextHandler.findall(text)]
         for word in words:
             # Check if the current word does not fit on the current line, or if the word is a newline character
             # then add the current line to the list of lines and reset the line

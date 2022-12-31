@@ -1,23 +1,39 @@
+from Infinitum.commons import font_18 as font, font_name as FONT
 from Infinitum.Core.DesktopWindowManager.Window import Frame
-from Infinitum.Core.Fonts.SimpleIO import Button, TextHandler
 from Infinitum.Core.Fonts.CompoundIO import DropDownMenu
+from Infinitum.Core.Fonts.SimpleIO import Button, NOTHING
 
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Callable
+
 import pygame, datetime
 
-text = TextHandler()
-_Shutdown = Button('Shutdown', Font=text.font, box_color=(200, 200, 200), text_size=14)
-_Restart = Button('Restart', Font=text.font, box_color=(200, 200, 200), text_size=14)
-_Install = Button('Install', Font=text.font, box_color=(200, 200, 200), text_size=14)
-font = pygame.font.Font(text.font, 18)
-_default_power = pygame.image.load(r'.\Infinitum\Sys\StatusBar\default_power.png')
+class SHUTDOWN(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+    @classmethod
+    def _raise(cls, *args, **kwargs):
+        raise SHUTDOWN
+
+class RESTART(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+    @classmethod
+    def _raise(cls, *args, **kwargs):
+        raise RESTART
+
+_Shutdown = Button('Shutdown', Font=FONT, box_color=(200, 200, 200), text_size=14, function= SHUTDOWN._raise)
+_Restart = Button('Restart', Font=FONT, box_color=(200, 200, 200), text_size=14, function= RESTART._raise)
+_default_power = pygame.image.load(r'.\Infinitum\Sys\Taskbar\default_power.png')
 
 class Taskbar:
     def __init__(self, display_res: Tuple[int, int] = (1600, 900), thickness: int = 60, processes: Dict[Tuple[pygame.Surface, Frame], pygame.Rect] = {},
-            color: Tuple[int, int, int] = (210, 210, 210), power_image: pygame.Surface = _default_power) -> None:
+            color: Tuple[int, int, int] = (210, 210, 210), power_image: pygame.Surface = _default_power, install: Callable = NOTHING) -> None:
         self.rect = pygame.Rect(0, display_res[1]-thickness, display_res[0], thickness)
         self.surf = pygame.Surface(self.rect.size)
         self.processes = processes
+        _Install = Button('Install', Font=FONT, box_color=(200, 200, 200), text_size=14, function=install)
         self.power_options = DropDownMenu(self.rect.topleft, dropup=True, buttons=[_Shutdown, _Restart, _Install])
         self.power_button_image = pygame.transform.smoothscale(power_image, (50, 50))
         self.power_button_rect = pygame.Rect((5, 5), (50, 50))
@@ -66,7 +82,7 @@ class Taskbar:
             self.power_options.visible = True
         else:
             for _, frame in self.processes.keys():
-                collision_rect.x, collision_rect.y = self.rect.x+60, self.rect.y
+                collision_rect.x = collision_rect.x+60
                 if collision_rect.collidepoint(*mouse_pos) and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if frame.minimize: frame.restore()
                     else: frame.mini()
