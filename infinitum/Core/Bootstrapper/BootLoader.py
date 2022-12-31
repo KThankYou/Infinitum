@@ -1,5 +1,4 @@
 # Handle normal boot
-#from Infinitum.Core.Threading.Threading import ThreadHandler
 from Infinitum.Core.Storage.FileManager import FileManager
 from Infinitum.Core.DesktopWindowManager.DWM import start
 from Infinitum.Sys.Login.Login import Login
@@ -12,8 +11,7 @@ def init():
     exit_code = 2
     while exit_code == 2:
         login = Login(display)
-        #pwd = login.main()
-        pwd = 'Abcd@123'
+        pwd = login.main()
 
         exit_code = start(display, pwd = pwd)
     return True
