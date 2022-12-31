@@ -12,6 +12,5 @@ def init():
     while exit_code == 2:
         login = Login(display)
         pwd = login.main()
-
         exit_code = start(display, pwd = pwd)
     return True

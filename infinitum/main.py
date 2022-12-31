@@ -1,4 +1,4 @@
-from Infinitum.Core.Bootstrapper.Boot import boot
+from Infinitum.Core.Bootstrapper.boot import boot
 
 def init():
     boot()

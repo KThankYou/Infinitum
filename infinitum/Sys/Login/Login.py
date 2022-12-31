@@ -5,17 +5,17 @@ import hashlib
 import pygame
 import sys 
 
-_bg = r'.\Infinitum\Sys\Login\login_default.png'
+_bg = r'.\Infinitum\Sys\Login\login_default.jpg'
 _pfp = r'.\Infinitum\Sys\Login\login_default_pfp.png'
 
-box_color, box_hover, text_color = (200, 200, 200), (162,26,0), (25,25,25)
+box_color, box_hover, text_color = (255, 255, 255), (200,200,200), (25,25,25)
 
 def _hash(string: str) -> str:
     return hashlib.sha256(hashlib.sha256(string.encode()).hexdigest().encode()).hexdigest()
 
 class Login:
     def __init__(self, display: pygame.Surface) -> None:
-        self.bg = pygame.image.load(_bg)
+        self.bg = pygame.transform.smoothscale(pygame.image.load(_bg), display.get_size())
         self.password = ''
         config = FM.get_config(r'.\Infinitum.vc')
         self.username = config['username']
@@ -24,7 +24,7 @@ class Login:
         self.DISPLAY = display
 
         # Circular pfp
-        pfp = pygame.image.load(_pfp)
+        pfp = pygame.transform.smoothscale(pygame.image.load(_pfp), (192, 192))
         size = pfp.get_size()
         self.pfp = pygame.Surface(size, pygame.SRCALPHA)
         pygame.draw.ellipse(self.pfp, (255, 255, 255, 255), (0, 0, *size))

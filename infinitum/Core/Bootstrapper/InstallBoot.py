@@ -21,7 +21,7 @@ def draw_text(txt: str, font: pygame.font.Font, color: Tuple, surface: pygame.Su
 class Installer:
     def __init__(self) -> None:
         self.FM = None
-        self.bg = pygame.image.load(r'.\Infinitum\Core\Bootstrapper\installer.jpg')
+        self.bg = pygame.transform.smoothscale(pygame.image.load(r'.\Infinitum\Core\Bootstrapper\installer.jpg'), (1600, 900))
         self.context = None
         self.username = self.password = ''
         self.error = None

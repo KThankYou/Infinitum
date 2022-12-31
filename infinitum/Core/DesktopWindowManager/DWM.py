@@ -114,7 +114,7 @@ class DesktopWindowManager:
         installed = {i.name: True for i in self.icons}
         for name, metadata in apps.items():
             if not installed.get(name, False):
-                self.add_icon(self.installer.get_icon(metadata))
+                self.add_icon(self.AppMan.get_icon(metadata))
 
 
 def start(display: pygame.Surface, pwd: str):

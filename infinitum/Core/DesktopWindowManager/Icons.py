@@ -1,6 +1,6 @@
 from Infinitum.Core.DesktopWindowManager.Window import Frame, _dummy_process
 from Infinitum.TYPEHINTS import _Process
-from Infinitum.commons import font_18 as font, empty_rect
+from Infinitum.commons import font_21 as font, empty_rect
 
 from typing import Tuple
 
@@ -18,7 +18,7 @@ class Icon:
         self.image = pygame.transform.smoothscale(self.image, (128, 128))
         self.process = process
         self.name = name[:15]
-        self.text = font.render(self.name, True, (0, 0, 0))
+        self.text = font.render(self.name, True, (200, 200, 200))
         self.rect = rect
         self.active = False
         self.process_size = process_size
@@ -26,7 +26,7 @@ class Icon:
         self.max_res = max_res
         self.draggable = draggable
         self.resizeable = resizeable
-
+        self.text_rect = self.text.get_rect().copy()
         self.args, self.kwargs = args, kwargs
 
     def launch(self, working_dir: str) -> Frame:
@@ -37,8 +37,10 @@ class Icon:
         return window
 
     def draw(self, surf: pygame.Surface, rect: pygame.Rect) -> pygame.Surface:
+        self.text_rect.centerx = self.rect.centerx
+        self.text_rect.top = self.rect.bottom 
         surf.blit(self.image, rect)
-        surf.blit(self.text, self.rect.bottomleft)
+        surf.blit(self.text, self.text_rect)
     
     def set_psize(self, x: int = None, y: int = None):
         self.process_size = ((x, self.process_size[0])[x is None], (y, self.process_size[1])[y is None])
@@ -46,6 +48,7 @@ class Icon:
     def update_pos(self, x: int = None, y: int = None, w: int = None, h: int = None) -> None:
         self.rect.topleft = ((x, self.rect.x)[x is None], (y, self.rect.y)[y is None])
         self.rect.size = ((w, self.rect.size[0])[w is None] , (h, self.rect.size[1])[h is None])
+        
 
 def _dummy_icon_gen(*args, **kwargs) -> Icon:
     return Icon(_dummy_process, name='dummy icon', *args, **kwargs)
