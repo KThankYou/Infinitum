@@ -28,7 +28,7 @@ tkinter.Tk().withdraw() # prevents an empty tkinter window from appearing
 #
 # The Order of these variables does not matter but all must exist
 
-# Name of the file with process class which has 
+# Name of the file with `Process` class which has 
 # a generator draw() which yields a pygame.Surface and
 # a method handle_event(event: pygame.event.Event, mouse_pos: Tuple[int, int], keys: pygame.key.ScancodeWrapper) to handle events
 target = "<name of file>" 
@@ -60,7 +60,6 @@ draggable = <bool>
 # If set to True then an will be passed to process.handle_event
 # which has an event.type == pygame.VIDEORESIZE
 resizeable = <bool>
-
 '''
 
 class AppMan:
