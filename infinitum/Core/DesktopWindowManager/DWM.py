@@ -12,7 +12,7 @@ _bg = r'.\Infinitum\Core\DesktopWindowManager\default_bg.jpg'
 class DesktopWindowManager:
     def __init__(self, pwd: str, display: pygame.Surface = None, windows: List[Frame] = [], icons: List[Icon] = []) -> None:
         self.FM = FileManager(r'.\Infinitum.vc', pwd)
-        self.bg = pygame.image.load(_bg)
+        self.bg = pygame.transform.smoothscale(pygame.image.load(_bg), display.get_size())
         self.icons, self.windows = list(icons), list(windows)
         self.grid = pygame.Rect(50, 50, 128, 128)
         self.display = display
