@@ -1,6 +1,6 @@
 from Infinitum.Core.Storage.Metadata import Metadata
-from Infinitum.TYPEHINTS import FileManager
-from Infinitum.CONSTANTS import BLOCKSIZE
+from Infinitum.Core.Misc.TYPEHINTS import FileManager
+from Infinitum.Core.Misc.CONSTANTS import BLOCKSIZE
 
 from typing import BinaryIO, Dict, List, Optional, Callable
 from math import ceil

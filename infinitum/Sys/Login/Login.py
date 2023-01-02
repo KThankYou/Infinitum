@@ -1,5 +1,5 @@
-from Infinitum.Core.Fonts.SimpleIO import TextHandler, TextBox, Button
 from Infinitum.Core.Storage.FileManager import FileManager as FM, _hash
+from Infinitum.Core.Fonts.SimpleIO import TextHandler, TextBox, Button
 
 import pygame
 import sys 

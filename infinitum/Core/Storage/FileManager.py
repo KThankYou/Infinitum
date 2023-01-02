@@ -1,17 +1,13 @@
-from Infinitum.CONSTANTS import MFT_SIZE, MBT_SIZE, BLOCKSIZE, RESERVED_SPACE
+from Infinitum.Core.Misc.CONSTANTS import MFT_SIZE, MBT_SIZE, BLOCKSIZE, RESERVED_SPACE
+from Infinitum.Core.Storage.MBT import MasterBootTable as MBT, _hash
 from Infinitum.Core.Storage.MFT import MasterFileTable as MFT
-from Infinitum.Core.Storage.MBT import MasterBootTable as MBT
 from Infinitum.Core.Storage.Metadata import Metadata
 
 from typing import Tuple, Dict, BinaryIO
 from math import ceil
 
 import tempfile
-import hashlib
 import pickle
-
-def _hash(string: str) -> str:
-    return hashlib.sha256(string.encode()).hexdigest()
 
 
 class FileManager:

@@ -1,6 +1,6 @@
-from Infinitum.commons import font_name as font, empty_rect, empty_surf, font_12 as caption
+from Infinitum.Core.Misc.commons import font_name as font, empty_rect, empty_surf, font_12 as caption
 from Infinitum.Core.Fonts.SimpleIO import Button
-from Infinitum.TYPEHINTS import _Process
+from Infinitum.Core.Misc.TYPEHINTS import _Process
 from typing import Tuple, Callable
 
 import tempfile
@@ -148,27 +148,3 @@ class Frame:
             self.surf.fill((0, 0, 0))
         else: self.top_border = pygame.Rect(*self.rect.topleft, 0, 0)
         self.display_surf = pygame.Surface(size)
-
-class _dummy_process:
-    def __init__(self, *args, **kwargs) -> None:
-        self.running = True
-        self.color = (0, 0, 0)
-        self.colors = _dummy_process.COLORS()
-
-    def draw(self) -> pygame.Surface:
-        surf = pygame.Surface((480, 360))
-        while self.running:
-            surf.fill(self.color)
-            yield surf
-
-    def handle_event(self, *args, **kwargs):
-        self.color = next(self.colors)
-    
-    @staticmethod
-    def COLORS():
-        while True:
-            for i in ((0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 255)):
-                yield i
-
-_dummy_window1 = Frame(_dummy_process, size=(480, 360))
-_dummy_window2 = Frame(_dummy_process, size=(480, 360))

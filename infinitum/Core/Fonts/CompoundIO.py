@@ -1,6 +1,6 @@
 from Infinitum.Core.DesktopWindowManager.Window import Frame
-from Infinitum.TYPEHINTS import Button
-from Infinitum.commons import empty_surf
+from Infinitum.Core.Misc.commons import empty_surf
+from Infinitum.Core.Misc.TYPEHINTS import Button
 
 from typing import List, Tuple, Dict
 

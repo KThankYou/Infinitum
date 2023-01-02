@@ -1,7 +1,8 @@
 #Context switch for normal or first time boot
-
 from Infinitum.Core.Bootstrapper import BootLoader, InstallBoot
-import os, pygame
+
+import pygame
+import os
 
 def boot():
     pygame.init()

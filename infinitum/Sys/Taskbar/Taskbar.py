@@ -1,7 +1,7 @@
-from Infinitum.commons import font_18 as font, font_name as FONT
+from Infinitum.Core.Misc.commons import font_18 as font, font_name as FONT
 from Infinitum.Core.DesktopWindowManager.Window import Frame
-from Infinitum.Core.Fonts.CompoundIO import DropDownMenu
 from Infinitum.Core.Fonts.SimpleIO import Button, NOTHING
+from Infinitum.Core.Fonts.CompoundIO import DropDownMenu
 
 from typing import Tuple, Dict, Callable
 

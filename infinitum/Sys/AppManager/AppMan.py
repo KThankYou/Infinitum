@@ -1,7 +1,7 @@
 from Infinitum.Core.Storage.FileManager import FileManager
 from Infinitum.Core.Storage.Metadata import Metadata
 from Infinitum.Core.DesktopWindowManager.Icons import Icon
-from Infinitum.TYPEHINTS import _Process
+from Infinitum.Core.Misc.TYPEHINTS import _Process
 
 from tkinter import filedialog
 from typing import List, Tuple

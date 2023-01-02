@@ -1,6 +1,6 @@
-from Infinitum.Core.DesktopWindowManager.Window import Frame, _dummy_process
-from Infinitum.TYPEHINTS import _Process
-from Infinitum.commons import font_21 as font, empty_rect
+from Infinitum.Core.DesktopWindowManager.Window import Frame
+from Infinitum.Core.Misc.commons import font_21 as font, empty_rect
+from Infinitum.Core.Misc.TYPEHINTS import _Process
 
 from typing import Tuple
 
@@ -48,7 +48,4 @@ class Icon:
     def update_pos(self, x: int = None, y: int = None, w: int = None, h: int = None) -> None:
         self.rect.topleft = ((x, self.rect.x)[x is None], (y, self.rect.y)[y is None])
         self.rect.size = ((w, self.rect.size[0])[w is None] , (h, self.rect.size[1])[h is None])
-        
 
-def _dummy_icon_gen(*args, **kwargs) -> Icon:
-    return Icon(_dummy_process, name='dummy icon', *args, **kwargs)

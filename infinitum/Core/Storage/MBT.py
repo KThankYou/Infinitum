@@ -1,9 +1,12 @@
-from Infinitum.CONSTANTS import MBT_SIZE
+from Infinitum.Core.Misc.CONSTANTS import MBT_SIZE
 
 from typing import BinaryIO, Dict
 
 import hashlib
 import pickle
+
+def _hash(string: str) -> str:
+    return hashlib.sha256(string.encode()).hexdigest()
 
 class MasterBootTable:
     def __init__(self, config: Dict) -> None:
@@ -19,7 +22,7 @@ class MasterBootTable:
     def make_MBT(cls, user: str, password: str) -> 'MasterBootTable':
         # Hash of password is used to encrypt
         # Hash of Hash is used for password check
-        for _ in range(2): password = hashlib.sha256(password.encode()).hexdigest()
+        password = _hash(_hash(password))
         config = {'username': user, 
                 'password': password,
                 'resolution': (1600, 900),

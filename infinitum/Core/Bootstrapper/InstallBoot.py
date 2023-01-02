@@ -2,8 +2,8 @@
 from Infinitum.Core.Bootstrapper.text import welcome, user_details, installation, installation_alt, install_success, install_fail
 from Infinitum.Core.Fonts.SimpleIO import TextHandler, Button, TextBox
 from Infinitum.Core.Storage.FileManager import FileManager
-from Infinitum.CONSTANTS import Pattern_Password
-from Infinitum.commons import empty_surf
+from Infinitum.Core.Misc.CONSTANTS import Pattern_Password
+from Infinitum.Core.Misc.commons import empty_surf
 
 from typing import Tuple
 

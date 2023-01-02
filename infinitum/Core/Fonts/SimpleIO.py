@@ -1,4 +1,4 @@
-from Infinitum.CONSTANTS import Pattern_TextHandler
+from Infinitum.Core.Misc.CONSTANTS import Pattern_TextHandler
 
 from typing import Tuple, Callable, List
 

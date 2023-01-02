@@ -1,13 +1,33 @@
-# for some constant values that a few files use, useful to be wary of circular imports
-import re
+# Some useful stuff for debugging
+from Infinitum.Core.DesktopWindowManager.Window import Frame
+from Infinitum.Core.DesktopWindowManager.Icons import Icon
 
-MBT_SIZE = 1024*1024//2 # 0.5 MB
-MFT_SIZE = 1*1024*1024 # 1 MB
-BLOCKSIZE = 1024*1024//4 # .25 MB
-RESERVED_SPACE = MBT_SIZE + MFT_SIZE
+import pygame
 
-Pattern_TextHandler = re.compile(r'(\n|[^\s]+)|(?: ( +) )')
-Pattern_Password = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\d\s])\S{8,}$")
+class _dummy_process:
+    def __init__(self, *args, **kwargs) -> None:
+        self.running = True
+        self.color = (0, 0, 0)
+        self.colors = _dummy_process.COLORS()
+
+    def draw(self) -> pygame.Surface:
+        surf = pygame.Surface((480, 360))
+        while self.running:
+            surf.fill(self.color)
+            yield surf
+
+    def handle_event(self, *args, **kwargs):
+        self.color = next(self.colors)
+    
+    @staticmethod
+    def COLORS():
+        while True:
+            for i in ((0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 255)):
+                yield i
+
+def _dummy_icon_gen(*args, **kwargs) -> Icon:
+    return Icon(_dummy_process, name='dummy icon', *args, **kwargs)
+
 
 DUMMY_TEXT1 = '''
 Sequi voluptatem vel sit delectus necessitatibus ea nihil reprehenderit. Voluptatem aut perspiciatis ut molestiae perspiciatis porro totam. Temporibus excepturi corporis vel alias quidem. Excepturi beatae et dignissimos excepturi sequi repudiandae omnis. Blanditiis et ipsam officiis neque recusandae qui non qui.'''

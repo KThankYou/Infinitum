@@ -1,7 +1,7 @@
 from Infinitum.Sys.Taskbar.Taskbar import Taskbar, SHUTDOWN, RESTART
 from Infinitum.Core.Storage.FileManager import FileManager
 from Infinitum.Sys.AppManager.AppMan import AppMan
-from Infinitum.TYPEHINTS import Frame, Icon
+from Infinitum.Core.Misc.TYPEHINTS import Frame, Icon
 
 from typing import Tuple, List
 
