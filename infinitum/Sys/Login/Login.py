@@ -1,7 +1,6 @@
 from Infinitum.Core.Fonts.SimpleIO import TextHandler, TextBox, Button
-from Infinitum.Core.Storage.FileManager import FileManager as FM
+from Infinitum.Core.Storage.FileManager import FileManager as FM, _hash
 
-import hashlib
 import pygame
 import sys 
 
@@ -9,9 +8,6 @@ _bg = r'.\Infinitum\Sys\Login\login_default.jpg'
 _pfp = r'.\Infinitum\Sys\Login\login_default_pfp.png'
 
 box_color, box_hover, text_color = (255, 255, 255), (200,200,200), (25,25,25)
-
-def _hash(string: str) -> str:
-    return hashlib.sha256(hashlib.sha256(string.encode()).hexdigest().encode()).hexdigest()
 
 class Login:
     def __init__(self, display: pygame.Surface) -> None:
@@ -104,5 +100,5 @@ class Login:
             yield surf
     
     def check_password(self) -> bool:
-        return _hash(self.password) == self.pwd_hash
+        return _hash(_hash(self.password)) == self.pwd_hash
         

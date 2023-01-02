@@ -4,18 +4,21 @@ from Infinitum.Core.Storage.MBT import MasterBootTable as MBT
 from Infinitum.Core.Storage.Metadata import Metadata
 
 from typing import Tuple, Dict, BinaryIO
-from hashlib import sha256
 from math import ceil
 
 import tempfile
+import hashlib
 import pickle
+
+def _hash(string: str) -> str:
+    return hashlib.sha256(string.encode()).hexdigest()
 
 
 class FileManager:
     def __init__(self, drive_path: str, pwd: str) -> None:
         self.drive, self.working_dir = open(drive_path, 'rb+'), tempfile.TemporaryDirectory()
-        key, self.MBT = sha256(pwd.encode()).hexdigest(), MBT.load(self.drive)
-        if sha256(key.encode()).hexdigest() != self.MBT.config['password']: raise ValueError('Incorrect Password')
+        key, self.MBT = (pwd), MBT.load(self.drive)
+        if _hash(key.encode()) != self.MBT.config['password']: raise ValueError('Incorrect Password')
         self.key = key
         self.MFT = MFT.load(self)
 
@@ -52,7 +55,7 @@ class FileManager:
     def initial_setup(cls, drive_path: str, username: str, password: str ) -> 'FileManager':
         with open(drive_path, 'wb+') as drive:
             MBT_, MFT_ = MBT.make_MBT(username, password), MFT.make_MFT()
-            MBT_.flush(drive); MFT_.flush(FileManager, drive, sha256(password.encode()).hexdigest())
+            MBT_.flush(drive); MFT_.flush(FileManager, drive, _hash(password))
         return cls(drive_path, password)
 
     # file_path is the location inside the app
