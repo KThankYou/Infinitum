@@ -29,15 +29,18 @@ _default_power = pygame.image.load(r'.\Infinitum\Sys\Taskbar\default_power.png')
 
 class Taskbar:
     def __init__(self, display_res: Tuple[int, int] = (1600, 900), thickness: int = 60, processes: Dict[Tuple[pygame.Surface, Frame], pygame.Rect] = {},
-            color: Tuple[int, int, int] = (210, 210, 210), power_image: pygame.Surface = _default_power, install: Callable = NOTHING) -> None:
+            color: Tuple[int, int, int] = (210, 210, 210), power_image: pygame.Surface = _default_power, install: Callable = NOTHING,
+            uninstaller: Callable = NOTHING) -> None:
         self.rect = pygame.Rect(0, display_res[1]-thickness, display_res[0], thickness)
         self.surf = pygame.Surface(self.rect.size)
         self.processes = processes
         _Install = Button('Install', Font=FONT, box_color=(200, 200, 200), text_size=14, function=install)
-        self.power_options = DropDownMenu(self.rect.topleft, dropup=True, buttons=[_Shutdown, _Restart, _Install])
+        _Uninstall = Button('Uninstall', Font=FONT, box_color=(200, 200, 200), text_size=14, function=uninstaller)
+        self.power_options = DropDownMenu(self.rect.topleft, dropup=True, buttons=[_Shutdown, _Restart, _Uninstall, _Install])
         self.power_button_image = pygame.transform.smoothscale(power_image, (50, 50))
         self.power_button_rect = pygame.Rect((5, 5), (50, 50))
         self.color, self.alive = color, True
+        self.id = 0
 
         self.refresh()
 

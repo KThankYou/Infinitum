@@ -1,5 +1,6 @@
 # Contains skeleton of all classes, used to not cause an accidental circular import while type hinting
 # Used only if the class is just needed for TypeHinting and should not be called
+# v.5.5
 
 from typing import Tuple, Dict, BinaryIO, List, Callable, Optional
 
@@ -74,7 +75,9 @@ class MasterFileTable:
     def update_size(self, metadata: Metadata, size: int): raise NotImplementedError
 
 class FileManager:
-    def __init__(self, drive_path: str, pwd: str) -> None: raise NotImplementedError
+    def __init__(self, drive_path: str, pwd: str) -> None:
+        self.MFT: MasterFileTable = None
+        self.MBT: MasterBootTable = None
 
     def temp(self) -> tempfile.TemporaryDirectory: raise NotImplementedError
 
@@ -158,8 +161,13 @@ class _Process:
 
 class Frame:
     def __init__(self, process: _Process, border: bool = True, fullscreen: bool = False, name: str = None, 
-        pos: Tuple[int, int] = (0, 0), size: Tuple[int, int] = (0, 0), max_res: Tuple[int, int] = (1600, 900), 
-        working_dir: str = tempfile.TemporaryDirectory().name, *args, **kwargs) -> None: raise NotImplementedError
+            pos: Tuple[int, int] = (0, 0), size: Tuple[int, int] = (0, 0), max_res: Tuple[int, int] = (1600, 900), 
+            working_dir: str = tempfile.TemporaryDirectory().name, *args, **kwargs) -> None: 
+        self.name: str = None
+        self.working_dir: str = None
+        self.alive: bool = None
+        self.id: int = None
+        raise NotImplementedError
 
     def draw(self) -> pygame.Surface: raise NotImplementedError
 
@@ -185,7 +193,11 @@ class Frame:
 
 class Icon:
     def __init__(self, process: _Process, name: str = 'name_placeholder', process_size: Tuple[int, int] = (0, 0), 
-        image: str = None, rect: pygame.Rect = 'empty_rect', fullscreen: bool = False, max_res: Tuple[int, int] = (1600, 900)) -> None: raise NotImplementedError
+        image: str = None, rect: pygame.Rect = 'empty_rect', fullscreen: bool = False, max_res: Tuple[int, int] = (1600, 900)) -> None: 
+        self.process: _Process = None
+        self.name: str = None
+        self.metadata: Metadata = None
+        self.image: pygame.Surface = None
 
     def launch(self, working_dir: str) -> Frame: raise NotImplementedError
 
@@ -203,21 +215,36 @@ class Installer:
     def get_icon(self, metadata: Metadata) -> Icon: raise NotImplementedError
 
 class DesktopWindowManager:
-    def __init__(self, pwd: str, windows: List[Frame] = [], icons: List[Icon] = []) -> None: raise NotImplementedError
+    def __init__(self, pwd: str, display: pygame.Surface, windows: List[Frame] = [], icons: List[Icon] = []) -> None: 
+        self.FM: FileManager = None
+        self.bg: pygame.Surface = None
+        self.icons, self.windows = list(icons), list(windows)
+        self.grid: pygame.Rect = None
+        self.display: pygame.Surface = None
+        self.active = None
+        self.installer: Installer = None
+        self.taskbar: Taskbar = None
+        self.surf: pygame.Surface = None
+        raise NotImplementedError
 
-    def main(self): raise NotImplementedError
+    def main(self) -> None: raise NotImplementedError
 
-    def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]): raise NotImplementedError
+    def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> None: raise NotImplementedError
 
-    def add_icon(self, icon_gen: Icon, **kwargs): raise NotImplementedError
+    def add_icon(self, icon_gen: Icon, **kwargs) -> None: raise NotImplementedError
 
-    def shutdown(self, code = 0): raise NotImplementedError
+    def shutdown(self, code = 0) -> int: raise NotImplementedError
 
-    def get_apps(self): raise NotImplementedError
+    def get_apps(self) -> None: raise NotImplementedError
+
+    def refresh(self) -> None: raise NotImplementedError
 
 class Taskbar:
     def __init__(self, display_res: Tuple[int, int] = (1600, 900), thickness: int = 60, processes: Dict[Tuple[pygame.Surface, Frame], pygame.Rect] = {},
-            color: Tuple[int, int, int] = (210, 210, 210), power_image: pygame.Surface = '_default_power') -> None:raise NotImplementedError
+            color: Tuple[int, int, int] = (210, 210, 210), power_image: pygame.Surface = '_default_power') -> None:
+        self.process_num: int = None    
+        self.processes = dict(processes)
+        raise NotImplementedError
 
     def add_process(self, image: pygame.Surface, process: Frame) -> None: raise NotImplementedError
 
@@ -254,9 +281,10 @@ class Button:
     def __init__(self, 
             text: str, Font: str, text_color: Tuple[int] = (255, 255, 255), box_color: Tuple[int] = (0, 0, 0),
             function: Callable = 'NOTHING', margin: Tuple[int] = (7, 7), text_size: Tuple[int] = 20, pos = (0, 0), border_size: int = 1,
-            hover_color: Tuple[int] = (200, 200, 200), border: bool = False, border_color: Tuple[int, int, int] = (0, 0, 0)) -> None: raise NotImplementedError
+            hover_color: Tuple[int] = (200, 200, 200), border: bool = False, border_color: Tuple[int, int, int] = (0, 0, 0),
+            *args, **kwargs) -> None: raise NotImplementedError
 
-    def on_click(self, generator = False, *args, **kwargs): raise NotImplementedError
+    def on_click(self, generator = False): raise NotImplementedError
 
     def __repr__(self) -> str: raise NotImplementedError
 

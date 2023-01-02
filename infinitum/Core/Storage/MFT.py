@@ -189,7 +189,7 @@ class MasterFileTable:
                     blocks.append(1)
                     node = node.next
                 node = None
-        self.blocks = blocks 
+        self.blocks = blocks
 
     @modified
     def update_size(self, metadata: Metadata, size: int):

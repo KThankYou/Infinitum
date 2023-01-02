@@ -18,9 +18,12 @@ class Frame:
         self.alive = True
         self.minimize = self.active = self.drag = False
         self.max_res = max_res
+        self.name = name
         self.text_surf = caption.render(name, True, (255, 255, 255), (0,0,0))
         self.draggable = draggable
         self.resizeable = resizeable
+
+        self.id = 2
 
         close_button = Button(' X ', Font= font, border = True, hover_color=pygame.Color('#C80815'), 
                                 function=self.close, text_size=16, border_color=(200,200,200))

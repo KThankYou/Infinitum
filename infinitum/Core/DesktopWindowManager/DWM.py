@@ -1,7 +1,8 @@
 from Infinitum.Sys.Taskbar.Taskbar import Taskbar, SHUTDOWN, RESTART
 from Infinitum.Core.Storage.FileManager import FileManager
-from Infinitum.Sys.AppManager.AppMan import AppMan
+from Infinitum.Sys.AppManager.AppMan import Installer, Uninstaller
 from Infinitum.Core.Misc.TYPEHINTS import Frame, Icon
+from Infinitum.Core.Misc.commons import CONTINUE
 
 from typing import Tuple, List
 
@@ -16,15 +17,17 @@ class DesktopWindowManager:
         self.icons, self.windows = list(icons), list(windows)
         self.grid = pygame.Rect(50, 50, 128, 128)
         self.display = display
-        self.AppMan = AppMan(self.FM, max_res = display.get_size())
-        self.taskbar = Taskbar(install=self.AppMan.install)
+        self.active = None
+        self.installer = Installer(self.FM, max_res = display.get_size())
+        self.uninstaller = Uninstaller(self.FM, self)
+        self.taskbar = Taskbar(install=self.installer.install, uninstaller = self.uninstaller.uninstaller)
+        self.uninstaller.update_pos(*self.taskbar.power_options.rect.bottomleft)
         self.windows.append(self.taskbar)
+        self.surf = pygame.Surface(self.FM.get_res(self.FM.drive_path))
 
-
-    def main(self):
+    def main(self) -> None:
         fps, quit = pygame.time.Clock(), False
         fps.tick(30)
-        surf = pygame.Surface((1600, 900))
         self.active = None
         while not quit:
             pygame.display.flip()
@@ -33,11 +36,11 @@ class DesktopWindowManager:
                     quit = True
                     break
                 
-                surf.blit(self.bg, (0, 0))
+                self.surf.blit(self.bg, (0, 0))
                 mouse_pos = pygame.mouse.get_pos()
 
                 # Draw all icons
-                for icon in self.icons: icon.draw(surf, icon.rect)
+                for icon in self.icons: icon.draw(self.surf, icon.rect)
 
                 # Set active window to None if mouse is clicked outside any windows
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -67,27 +70,39 @@ class DesktopWindowManager:
                 if self.active is None: self.handle_event(event, mouse_pos)
                 else:
                     try: self.active.handle_event(event, mouse_pos)
-                    except SHUTDOWN: return self.shutdown(0)
+                    except SHUTDOWN: 
+                        self.FM.MFT.consolidate()
+                        self.FM.flush()
+                        return self.shutdown(0)
                     except RESTART: return self.shutdown(2)
+                    except CONTINUE: continue
                     # Update the position of the window if it is being dragged
                     if (self.taskbar not in (self.active, window)) and self.active.drag:
                         self.active.update_pos(x=mouse_pos[0] - window.drag_offset[0], y=mouse_pos[1] - window.drag_offset[1])
-                if self.taskbar.power_options.visible: surf.blit(self.taskbar.power_options.draw(), self.taskbar.power_options.rect)
-                # Draw all alive windows
-                windows, process_num = [], 0
-                for window in self.windows:
-                    if window.alive:
-                        process_num += 1
-                        windows.append(window)
-                        surf.blit(window.draw(), window.get_rect())
-                self.windows = windows
-                self.taskbar.process_num = process_num
 
-                self.display.blit(surf, (0,0))
-                pygame.display.update()
-                self.get_apps()
+                self.refresh()
 
-    def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]):
+    def refresh(self) -> None:
+        # Draw all alive windows and remove dead ones
+        windows, process_num = [], 0
+        for window in self.windows:
+            if window.alive and window:
+                process_num += 1
+                windows.append(window)
+                self.surf.blit(window.draw(), window.get_rect())
+
+        if self.taskbar.power_options.visible: 
+            self.surf.blit(self.taskbar.power_options.draw(), self.taskbar.power_options.rect)
+        
+        # Stuff for optimization, makes it so that the taskbar only redraws if necessary
+        self.windows = windows
+        self.taskbar.process_num = process_num
+
+        self.display.blit(self.surf, (0,0))
+        pygame.display.update()
+        self.get_apps()
+
+    def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> None:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             for icon in self.icons:
                 if icon.rect.collidepoint(*mouse_pos):
@@ -95,7 +110,7 @@ class DesktopWindowManager:
                     self.windows.append(process)
                     self.taskbar.add_process(icon.image, process)
     
-    def add_icon(self, icon: Icon):
+    def add_icon(self, icon: Icon) -> None:
         x, y = self.grid.topleft
         size = self.grid.h
         if x + size > 1500: x, y = - 100, y + 150
@@ -104,20 +119,20 @@ class DesktopWindowManager:
         icon.rect = grid
         self.icons.append(icon)
     
-    def shutdown(self, code = 0):
+    def shutdown(self, code = 0) -> int:
         self.FM.close()
         return code
     
-    def get_apps(self):
+    def get_apps(self) -> None:
         apps = self.FM.get_apps()
         if len(apps) == len(self.icons): return 
         installed = {i.name: True for i in self.icons}
         for name, metadata in apps.items():
             if not installed.get(name, False):
-                self.add_icon(self.AppMan.get_icon(metadata))
+                self.add_icon(self.installer.get_icon(metadata))
 
 
-def start(display: pygame.Surface, pwd: str):
+def start(display: pygame.Surface, pwd: str) -> int:
     dwm = DesktopWindowManager(pwd, display = display)
     return dwm.main()
     

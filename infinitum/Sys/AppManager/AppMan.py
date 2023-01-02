@@ -1,15 +1,18 @@
-from Infinitum.Core.Storage.FileManager import FileManager
-from Infinitum.Core.Storage.Metadata import Metadata
+from Infinitum.Core.Misc.commons import empty_rect, font_name as font, CONTINUE
+from Infinitum.Core.Misc.TYPEHINTS import FileManager, Metadata, _Process
+from Infinitum.Core.Misc.TYPEHINTS import DesktopWindowManager
 from Infinitum.Core.DesktopWindowManager.Icons import Icon
-from Infinitum.Core.Misc.TYPEHINTS import _Process
+from Infinitum.Core.Fonts.CompoundIO import DropDownMenu
+from Infinitum.Core.Fonts.SimpleIO import Button
 
-from tkinter import filedialog
 from typing import List, Tuple
+from tkinter import filedialog
 
 import importlib
 import tkinter
 import tomllib
 import shutil
+import pygame
 import sys
 import os
 
@@ -62,11 +65,12 @@ draggable = <bool>
 resizeable = <bool>
 '''
 
-class AppMan:
-    def __init__(self, FM: FileManager, max_res: Tuple[int, int] = (1600, 900),paths: List[str] = []) -> None:
+class Installer:
+    def __init__(self, FM: FileManager, max_res: Tuple[int, int] = (1600, 900), paths: List[str] = []) -> None:
         self.FileManager = FM
         self.paths = list(paths)
         self.max_res = max_res
+        self.id = 0
     
     def install(self):
         folder_path = filedialog.askdirectory()
@@ -103,4 +107,65 @@ class AppMan:
         image_path = os.path.join(path.name, *(data['image'].split('\\')))
         return Icon(**{'process': Process, 'name': data['name'], 'process_size': resolution, 'image': image_path,
                     'fullscreen': data['fullscreen'], 'max_res': self.max_res, 'cwd': path.name, 
-                    'draggable': data['draggable'], 'resizeable': data['resizeable']})
+                    'draggable': data['draggable'], 'resizeable': data['resizeable'], 'metadata': metadata})
+
+class Uninstaller:
+    def __init__(self, FM: FileManager, dwm: DesktopWindowManager) -> None:
+        self.rect = empty_rect
+        self.FileManager = FM
+        self.dwm = dwm
+        self.alive = False
+        self.id = 0
+
+        self.drag = False
+        self.draggable = False
+        
+    def uninstall(self, app_name: str, metadata: Metadata) -> None:
+        for window in self.dwm.windows: # close app if its alive
+            if window.id != 0 and window.name == app_name: 
+                window.close()
+                
+        for i, icon in enumerate(self.dwm.icons): # remove icons from desktop
+            if icon.name == app_name:
+                del self.dwm.icons[i]
+                break
+            
+        self.FileManager.MFT.del_metadata(metadata)
+        self.FileManager.del_folder(app_name, '.\\Apps')
+        self.FileManager.flush()
+        self.refresh()
+        self.alive = False
+        self.dwm.active = None
+        self.dwm.windows.remove(self)
+        self.dwm.refresh()
+        raise CONTINUE
+
+    def refresh(self) -> None:
+        buttons = []
+        for icon in self.dwm.icons:
+            button = Button(icon.name, font, function=self.uninstall, text_size = 14, 
+                    box_color = (200, 200, 200), app_name = icon.name, metadata = icon.metadata)
+            buttons.append(button)
+        self.menu = DropDownMenu(self.rect.topleft, dropup=True, buttons = buttons)
+        self.menu.topleft = self.rect.topleft
+        self.rect = self.menu.rect
+
+    def draw(self) -> pygame.Surface:
+        return self.menu.draw()
+    
+    def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int], *args, **kwargs) -> None:
+        self.menu.handle_event(event, mouse_pos)
+    
+    def uninstaller(self):
+        self.refresh()
+        self.alive = True
+        self.dwm.windows.append(self)
+        self.dwm.active = self
+    
+    def update_pos(self, x: int = None, y: int = None, w: int = None, h: int = None) -> None:
+        self.rect.topleft = ((x, self.rect.x)[x is None], (y, self.rect.y)[y is None])
+        self.rect.size = ((w, self.rect.size[0])[w is None] , (h, self.rect.size[1])[h is None])
+        self.refresh()
+    
+    def get_rect(self):
+        return self.rect

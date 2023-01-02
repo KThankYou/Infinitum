@@ -1,6 +1,6 @@
 from Infinitum.Core.DesktopWindowManager.Window import Frame
 from Infinitum.Core.Misc.commons import font_21 as font, empty_rect
-from Infinitum.Core.Misc.TYPEHINTS import _Process
+from Infinitum.Core.Misc.TYPEHINTS import _Process, Metadata
 
 from typing import Tuple
 
@@ -13,7 +13,7 @@ default_image = pygame.image.load(default_icon)
 class Icon:
     def __init__(self, process: _Process, name: str = 'name_placeholder', process_size: Tuple[int, int] = (0, 0), 
     image: str = None, rect: pygame.Rect = empty_rect, fullscreen: bool = False, max_res: Tuple[int, int] = (1600, 900),
-    draggable: bool = True, resizeable: bool = True, *args, **kwargs) -> None:
+    draggable: bool = True, resizeable: bool = True, metadata: Metadata = None, *args, **kwargs) -> None:
         self.image = default_image if image is None else pygame.image.load(image)
         self.image = pygame.transform.smoothscale(self.image, (128, 128))
         self.process = process
@@ -27,6 +27,7 @@ class Icon:
         self.draggable = draggable
         self.resizeable = resizeable
         self.text_rect = self.text.get_rect().copy()
+        self.metadata = metadata
         self.args, self.kwargs = args, kwargs
 
     def launch(self, working_dir: str) -> Frame:

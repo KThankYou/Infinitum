@@ -114,7 +114,8 @@ class Button:
     def __init__(self, 
             text: str, Font: str, text_color: Tuple[int] = (255, 255, 255), box_color: Tuple[int] = (0, 0, 0),
             function: Callable = NOTHING, margin: Tuple[int] = (7, 7), text_size: Tuple[int] = 20, pos = (0, 0), border_size: int = 1,
-            hover_color: Tuple[int] = (200, 200, 200), border: bool = False, border_color: Tuple[int, int, int] = (0, 0, 0)) -> None:
+            hover_color: Tuple[int] = (200, 200, 200), border: bool = False, border_color: Tuple[int, int, int] = (0, 0, 0),
+            *args, **kwargs) -> None:
 
         font = pygame.font.Font(Font, text_size)
         self.text = text
@@ -139,8 +140,10 @@ class Button:
         self.function = function
         self.hover = False
 
-    def on_click(self, generator = False, *args, **kwargs):
-        return self.function if generator else self.function(*args, **kwargs)
+        self.args, self.kwargs = args, kwargs
+
+    def on_click(self, generator = False):
+        return self.function if generator else self.function(*self.args, **self.kwargs)
 
     def __repr__(self) -> str:
         return f'Button({self.text})'

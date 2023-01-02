@@ -11,3 +11,7 @@ font_name = text.font
 font_12 = pygame.font.Font(font_name, 12)
 font_18 = pygame.font.Font(font_name, 18)
 font_21 = pygame.font.Font(font_name, 21)
+
+class CONTINUE(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)

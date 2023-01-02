@@ -13,10 +13,11 @@ import pickle
 class FileManager:
     def __init__(self, drive_path: str, pwd: str) -> None:
         self.drive, self.working_dir = open(drive_path, 'rb+'), tempfile.TemporaryDirectory()
-        key, self.MBT = (pwd), MBT.load(self.drive)
-        if _hash(key.encode()) != self.MBT.config['password']: raise ValueError('Incorrect Password')
+        key, self.MBT = _hash(pwd), MBT.load(self.drive)
+        if _hash(key) != self.MBT.config['password']: raise ValueError('Incorrect Password')
         self.key = key
         self.MFT = MFT.load(self)
+        self.drive_path = drive_path
 
     def temp(self) -> tempfile.TemporaryDirectory: 
         return tempfile.TemporaryDirectory(dir = self.working_dir.name)
