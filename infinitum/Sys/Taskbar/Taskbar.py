@@ -25,7 +25,7 @@ class RESTART(Exception):
 
 _Shutdown = Button('Shutdown', Font=FONT, box_color=(200, 200, 200), text_size=14, function= SHUTDOWN._raise)
 _Restart = Button('Restart', Font=FONT, box_color=(200, 200, 200), text_size=14, function= RESTART._raise)
-_default_power = pygame.image.load(r'.\Infinitum\Sys\Taskbar\default_power.png')
+_default_power = pygame.image.load(r'.\Assets\default_power.png')
 
 class Taskbar:
     def __init__(self, display_res: Tuple[int, int] = (1600, 900), thickness: int = 60, processes: Dict[Tuple[pygame.Surface, Frame], pygame.Rect] = {},

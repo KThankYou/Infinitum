@@ -6,7 +6,7 @@ from typing import Tuple
 
 import pygame
 
-default_icon = r'.\Infinitum\Core\DesktopWindowManager\default_thumb.png'
+default_icon = r'.\Assets\default_thumb.png'
 default_image = pygame.image.load(default_icon)
 
 
