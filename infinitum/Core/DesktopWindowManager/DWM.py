@@ -8,7 +8,7 @@ from typing import Tuple, List
 
 import pygame
 
-_bg = r'.\Infinitum\Core\DesktopWindowManager\default_bg.jpg'
+_bg = r'.\Assets\default_bg.jpg'
 
 class DesktopWindowManager:
     def __init__(self, pwd: str, display: pygame.Surface = None, windows: List[Frame] = [], icons: List[Icon] = []) -> None:

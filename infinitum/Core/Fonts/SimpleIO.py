@@ -6,7 +6,7 @@ import pygame
 import sys
 
 _FONT = {
-    'OpenSans': r'.\Infinitum\Core\Fonts\OpenSans\OpenSans-VariableFont_wdth,wght.ttf',
+    'OpenSans': r'.\Assets\Fonts\OpenSans\OpenSans-VariableFont_wdth,wght.ttf',
     
     }
 

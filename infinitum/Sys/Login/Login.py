@@ -4,8 +4,8 @@ from Infinitum.Core.Fonts.SimpleIO import TextHandler, TextBox, Button
 import pygame
 import sys 
 
-_bg = r'.\Infinitum\Sys\Login\login_default.jpg'
-_pfp = r'.\Infinitum\Sys\Login\login_default_pfp.png'
+_bg = r'.\Assets\login_default.jpg'
+_pfp = r'.\Assets\login_default_pfp.png'
 
 box_color, box_hover, text_color = (255, 255, 255), (200,200,200), (25,25,25)
 
