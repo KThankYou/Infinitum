@@ -74,7 +74,12 @@ class Frame:
                 if keys[pygame.K_z]: self.close()
                 if keys[pygame.K_x]: self.mini()
         else: 
-            if self.draggable: kwargs['rect'] = self.rect
+            if self.draggable: 
+                kwargs['rect'] = self.rect.copy()
+                if self.border: 
+                    x, y = self.rect.x-1, self.rect.y+12
+                    kwargs['rect'].topleft = x, y
+                    kwargs['rect'].size = self.display_surf.get_size()
             self.process.handle_event(event = event, mouse_pos = mouse_pos, keys = keys, *args, **kwargs)
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.draggable:

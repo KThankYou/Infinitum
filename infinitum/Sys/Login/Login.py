@@ -20,8 +20,8 @@ class Login:
         self.DISPLAY = display
 
         # Circular pfp
-        pfp = pygame.transform.smoothscale(pygame.image.load(_pfp), (192, 192))
-        size = pfp.get_size()
+        size = [display.get_size()[0]//10]*2
+        pfp = pygame.transform.smoothscale(pygame.image.load(_pfp), (160, 160))
         self.pfp = pygame.Surface(size, pygame.SRCALPHA)
         pygame.draw.ellipse(self.pfp, (255, 255, 255, 255), (0, 0, *size))
         self.pfp.blit(pfp, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
