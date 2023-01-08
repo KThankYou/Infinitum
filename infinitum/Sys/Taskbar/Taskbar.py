@@ -41,6 +41,7 @@ class Taskbar:
         self.power_button_rect = pygame.Rect((5, 5), (50, 50))
         self.color, self.alive = color, True
         self.id = 0
+        self.drag = self.draggable = False
 
         self.refresh()
 
@@ -100,6 +101,6 @@ class Taskbar:
         self.surf.blit(time_text, t_rect)
         self.surf.blit(date_text, d_rect)
 
-    def get_rect(self) -> pygame.Surface:
+    def get_rect(self) -> pygame.Rect:
         return self.rect
 

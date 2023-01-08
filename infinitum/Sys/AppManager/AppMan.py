@@ -1,14 +1,15 @@
 from Infinitum.Core.Misc.commons import empty_rect, font_name as font, CONTINUE
 from Infinitum.Core.Misc.TYPEHINTS import FileManager, Metadata, _Process
-from Infinitum.Core.Misc.TYPEHINTS import DesktopWindowManager
+from Infinitum.Core.Misc.TYPEHINTS import DesktopWindowManager, Taskbar
 from Infinitum.Core.DesktopWindowManager.Icons import Icon
 from Infinitum.Core.Fonts.CompoundIO import DropDownMenu
 from Infinitum.Core.Fonts.SimpleIO import Button
 
-from typing import List, Tuple
+from typing import Dict, Tuple
 from tkinter import filedialog
 
 import importlib
+import tempfile
 import tkinter
 import tomllib
 import shutil
@@ -66,9 +67,9 @@ resizeable = <bool>
 '''
 
 class Installer:
-    def __init__(self, FM: FileManager, max_res: Tuple[int, int] = (1600, 900), paths: List[str] = []) -> None:
+    def __init__(self, FM: FileManager, max_res: Tuple[int, int] = (1600, 900), paths: Dict[str, tempfile.TemporaryDirectory] = {}) -> None:
         self.FileManager = FM
-        self.paths = list(paths)
+        self.paths = dict(paths)
         self.max_res = max_res
         self.id = 0
     
@@ -78,26 +79,31 @@ class Installer:
         with open(config_file_path, 'rb') as file: data = tomllib.load(file)
 
         sys.path.append(folder_path)
-        importlib.import_module(data['target']).Process
+        abs_logo = os.path.join(folder_path, *(data['image'].split('\\')))
+        Icon(**{'process': importlib.import_module(data['target']).Process, 'name': data['name'], 
+                'process_size': (data['width'], data['height']), 'image': abs_logo, 'fullscreen': data['fullscreen'], 
+                'max_res': self.max_res, 'cwd': folder_path, 'draggable': data['draggable'], 
+                'resizeable': data['resizeable'], 'metadata': None})
+
 
         working_dir = self.FileManager.temp()
         zip_file = os.path.join(working_dir.name, *(data['target'].split('\\')))
         path = shutil.make_archive(zip_file, 'zip', folder_path)
 
         app_path = self.FileManager.make_folder(f"{data['name']}", r'.\Apps', overwrite = True)
-
         handle = self.FileManager.write_open(data['name'], app_path)
         with open(path, 'rb') as zip: handle.write(zip.read())
         handle.close()
         
         working_dir.cleanup()
+        sys.path.pop()
 
     def get_icon(self, metadata: Metadata) -> Icon:
         data, path = self.FileManager.read(metadata), self.FileManager.temp()
-        self.paths.append(path)
-        with open(os.path.join(path.name, 'setup.zip'), 'wb') as drive:
+        self.paths[metadata.name] = path
+        with open(os.path.join(path.name, f'{metadata.name}.zip'), 'wb') as drive:
             drive.write(data)
-        shutil.unpack_archive(os.path.join(path.name, 'setup.zip'), path.name, 'zip')
+        shutil.unpack_archive(os.path.join(path.name, f'{metadata.name}.zip'), path.name, 'zip')
         sys.path.insert(1, path.name)
         config_file_path = os.path.join(path.name, 'infinstall.toml')
         with open(config_file_path, 'rb') as file: data = tomllib.load(file)
@@ -105,20 +111,22 @@ class Installer:
         Process: _Process = importlib.import_module(data['target']).Process
         resolution = (data['width'], data['height'])
         image_path = os.path.join(path.name, *(data['image'].split('\\')))
+        sys.path.pop(1)
         return Icon(**{'process': Process, 'name': data['name'], 'process_size': resolution, 'image': image_path,
                     'fullscreen': data['fullscreen'], 'max_res': self.max_res, 'cwd': path.name, 
                     'draggable': data['draggable'], 'resizeable': data['resizeable'], 'metadata': metadata})
 
 class Uninstaller:
-    def __init__(self, FM: FileManager, dwm: DesktopWindowManager) -> None:
+    def __init__(self, FM: FileManager, dwm: DesktopWindowManager, installer: Installer) -> None:
         self.rect = empty_rect
         self.FileManager = FM
         self.dwm = dwm
         self.alive = False
         self.id = 0
-
+        self.installer = installer
         self.drag = False
         self.draggable = False
+        self.def_pos_bleft: Tuple[int, int] = None
         
     def uninstall(self, app_name: str, metadata: Metadata) -> None:
         for window in self.dwm.windows: # close app if its alive
@@ -129,7 +137,9 @@ class Uninstaller:
             if icon.name == app_name:
                 del self.dwm.icons[i]
                 break
-            
+        
+        self.installer.paths[metadata.name].cleanup()
+    
         self.FileManager.MFT.del_metadata(metadata)
         self.FileManager.del_folder(app_name, '.\\Apps')
         self.FileManager.flush()
@@ -147,8 +157,8 @@ class Uninstaller:
                     box_color = (200, 200, 200), app_name = icon.name, metadata = icon.metadata)
             buttons.append(button)
         self.menu = DropDownMenu(self.rect.topleft, dropup=True, buttons = buttons)
-        self.menu.topleft = self.rect.topleft
         self.rect = self.menu.rect
+        self.rect.bottomleft = self.def_pos_bleft
 
     def draw(self) -> pygame.Surface:
         return self.menu.draw()
