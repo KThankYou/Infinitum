@@ -258,7 +258,7 @@ class Taskbar:
 
     def set_datetime(self) -> None: raise NotImplementedError
 
-    def get_rect(self) -> pygame.Surface: raise NotImplementedError
+    def get_rect(self) -> pygame.Rect: raise NotImplementedError
 
 class TextHandler:
     def __init__(self, font: str = 'OpenSans', starting: Tuple = (0, 0)) -> None: raise NotImplementedError
