@@ -1,6 +1,6 @@
 from Infinitum.Core.Misc.commons import empty_rect, font_name as font, CONTINUE
 from Infinitum.Core.Misc.TYPEHINTS import FileManager, Metadata, _Process
-from Infinitum.Core.Misc.TYPEHINTS import DesktopWindowManager
+from Infinitum.Core.Misc.TYPEHINTS import DesktopWindowManager, Taskbar
 from Infinitum.Core.DesktopWindowManager.Icons import Icon
 from Infinitum.Core.Fonts.CompoundIO import DropDownMenu
 from Infinitum.Core.Fonts.SimpleIO import Button
@@ -79,7 +79,12 @@ class Installer:
         with open(config_file_path, 'rb') as file: data = tomllib.load(file)
 
         sys.path.append(folder_path)
-        importlib.import_module(data['target']).Process
+        abs_logo = os.path.join(folder_path, *(data['image'].split('\\')))
+        Icon(**{'process': importlib.import_module(data['target']).Process, 'name': data['name'], 
+                'process_size': (data['width'], data['height']), 'image': abs_logo, 'fullscreen': data['fullscreen'], 
+                'max_res': self.max_res, 'cwd': folder_path, 'draggable': data['draggable'], 
+                'resizeable': data['resizeable'], 'metadata': None})
+
 
         working_dir = self.FileManager.temp()
         zip_file = os.path.join(working_dir.name, *(data['target'].split('\\')))
@@ -121,6 +126,7 @@ class Uninstaller:
         self.installer = installer
         self.drag = False
         self.draggable = False
+        self.def_pos_bleft: Tuple[int, int] = None
         
     def uninstall(self, app_name: str, metadata: Metadata) -> None:
         for window in self.dwm.windows: # close app if its alive
@@ -151,8 +157,8 @@ class Uninstaller:
                     box_color = (200, 200, 200), app_name = icon.name, metadata = icon.metadata)
             buttons.append(button)
         self.menu = DropDownMenu(self.rect.topleft, dropup=True, buttons = buttons)
-        self.menu.topleft = self.rect.topleft
         self.rect = self.menu.rect
+        self.rect.bottomleft = self.def_pos_bleft
 
     def draw(self) -> pygame.Surface:
         return self.menu.draw()

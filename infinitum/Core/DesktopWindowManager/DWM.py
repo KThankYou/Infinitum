@@ -21,6 +21,7 @@ class DesktopWindowManager:
         self.installer = Installer(self.FM, max_res = display.get_size())
         self.uninstaller = Uninstaller(self.FM, self, self.installer)
         self.taskbar = Taskbar(install=self.installer.install, uninstaller = self.uninstaller.uninstaller)
+        self.uninstaller.def_pos_bleft = self.taskbar.power_options.rect.bottomleft
         self.uninstaller.update_pos(*self.taskbar.power_options.rect.bottomleft)
         self.windows.append(self.taskbar)
         self.surf = pygame.Surface(self.FM.get_res(self.FM.drive_path))

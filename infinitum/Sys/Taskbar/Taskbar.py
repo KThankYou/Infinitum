@@ -101,6 +101,6 @@ class Taskbar:
         self.surf.blit(time_text, t_rect)
         self.surf.blit(date_text, d_rect)
 
-    def get_rect(self) -> pygame.Surface:
+    def get_rect(self) -> pygame.Rect:
         return self.rect
 
