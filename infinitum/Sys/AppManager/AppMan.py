@@ -96,9 +96,9 @@ class Installer:
     def get_icon(self, metadata: Metadata) -> Icon:
         data, path = self.FileManager.read(metadata), self.FileManager.temp()
         self.paths[metadata.name] = path
-        with open(os.path.join(path.name, 'setup.zip'), 'wb') as drive:
+        with open(os.path.join(path.name, f'{metadata.name}.zip'), 'wb') as drive:
             drive.write(data)
-        shutil.unpack_archive(os.path.join(path.name, 'setup.zip'), path.name, 'zip')
+        shutil.unpack_archive(os.path.join(path.name, f'{metadata.name}.zip'), path.name, 'zip')
         sys.path.insert(1, path.name)
         config_file_path = os.path.join(path.name, 'infinstall.toml')
         with open(config_file_path, 'rb') as file: data = tomllib.load(file)
