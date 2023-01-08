@@ -157,10 +157,16 @@ class Uninstaller:
                     box_color = (200, 200, 200), app_name = icon.name, metadata = icon.metadata)
             buttons.append(button)
         self.menu = DropDownMenu(self.rect.topleft, dropup=True, buttons = buttons)
+        self.menu.rect.bottomleft = self.def_pos_bleft
         self.rect = self.menu.rect
-        self.rect.bottomleft = self.def_pos_bleft
 
     def draw(self) -> pygame.Surface:
+        if self.dwm.active is not self:
+            self.menu.visible = False
+            self.alive = False
+            self.dwm.active = None
+            self.dwm.windows.remove(self)
+            self.dwm.refresh()
         return self.menu.draw()
     
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int], *args, **kwargs) -> None:
