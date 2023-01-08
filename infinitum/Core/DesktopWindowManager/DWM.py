@@ -19,7 +19,7 @@ class DesktopWindowManager:
         self.display = display
         self.active = None
         self.installer = Installer(self.FM, max_res = display.get_size())
-        self.uninstaller = Uninstaller(self.FM, self)
+        self.uninstaller = Uninstaller(self.FM, self, self.installer)
         self.taskbar = Taskbar(install=self.installer.install, uninstaller = self.uninstaller.uninstaller)
         self.uninstaller.update_pos(*self.taskbar.power_options.rect.bottomleft)
         self.windows.append(self.taskbar)
@@ -71,7 +71,7 @@ class DesktopWindowManager:
                 else:
                     try: self.active.handle_event(event, mouse_pos)
                     except SHUTDOWN: 
-                        self.FM.MFT.consolidate()
+                        #self.FM.MFT.consolidate()
                         self.FM.flush()
                         return self.shutdown(0)
                     except RESTART: return self.shutdown(2)
@@ -79,8 +79,8 @@ class DesktopWindowManager:
                     # Update the position of the window if it is being dragged
                     if (self.taskbar not in (self.active, window)) and self.active.drag:
                         self.active.update_pos(x=mouse_pos[0] - window.drag_offset[0], y=mouse_pos[1] - window.drag_offset[1])
-
                 self.refresh()
+            self.refresh()
 
     def refresh(self) -> None:
         # Draw all alive windows and remove dead ones
@@ -106,7 +106,7 @@ class DesktopWindowManager:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             for icon in self.icons:
                 if icon.rect.collidepoint(*mouse_pos):
-                    process = icon.launch(self.FM.temp())
+                    process = icon.launch(self.installer.paths[icon.name].name)
                     self.windows.append(process)
                     self.taskbar.add_process(icon.image, process)
     
@@ -130,7 +130,13 @@ class DesktopWindowManager:
         for name, metadata in apps.items():
             if not installed.get(name, False):
                 self.add_icon(self.installer.get_icon(metadata))
+        self.update_icons()
 
+    def update_icons(self):
+        icons, self.icons = self.icons, []
+        self.grid = pygame.Rect(50, 50, 128, 128)
+        for icon in icons:
+            self.add_icon(icon)
 
 def start(display: pygame.Surface, pwd: str) -> int:
     dwm = DesktopWindowManager(pwd, display = display)
