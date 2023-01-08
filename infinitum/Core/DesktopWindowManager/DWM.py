@@ -32,6 +32,7 @@ class DesktopWindowManager:
         while not quit:
             pygame.display.flip()
             for event in pygame.event.get():
+                pygame.display.set_caption('Infinitum')
                 if event.type == pygame.QUIT:
                     quit = True
                     break
